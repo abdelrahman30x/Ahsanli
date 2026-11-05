@@ -1,0 +1,9 @@
+[Unit]
+Description=Update AHSANLY local IP-to-country database
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/bin/bash /srv/ahsanly/ops/ahsanly-geoip-update.sh

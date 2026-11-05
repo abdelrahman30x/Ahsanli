@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily check for BotAfflite IP certificate renewal
+
+[Timer]
+OnCalendar=daily
+RandomizedDelaySec=2h
+Persistent=true
+Unit=botafflite-cert-renew.service
+
+[Install]
+WantedBy=timers.target

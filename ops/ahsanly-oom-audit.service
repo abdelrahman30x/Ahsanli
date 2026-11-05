@@ -1,0 +1,7 @@
+[Unit]
+Description=AHSANLY OOM audit for release gate
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/bin/bash /srv/ahsanly/ops/ahsanly-oom-audit.sh

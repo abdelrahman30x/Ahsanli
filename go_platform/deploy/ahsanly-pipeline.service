@@ -1,0 +1,25 @@
+[Unit]
+Description=AHSANLY Go verified deal photo pipeline
+After=network-online.target postgresql@18-main.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=botdeals
+Group=botdeals
+WorkingDirectory=/srv/ahsanly
+EnvironmentFile=/etc/ahsanly/ahsanly.env
+Environment=AHSANLY_CAPTURE_DIR=/var/lib/ahsanly/captures
+ExecStart=/srv/ahsanly/go_platform/bin/ahsanly-pipeline --apply --allow-live-channels --browser=/opt/ahsanly-chromium/chrome-headless-shell --capture-dir=/var/lib/ahsanly/captures
+Restart=on-failure
+RestartSec=30
+MemoryMax=500M
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/var/lib/ahsanly/captures
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,23 @@
+[Unit]
+Description=BotAfflite shadow deal worker
+After=network-online.target postgresql@18-main.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=botdeals
+Group=botdeals
+WorkingDirectory=/root/botAfflite
+EnvironmentFile=/root/botAfflite/deal.env
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/root/botAfflite/deal_venv/bin/python manage.py run_worker
+Restart=on-failure
+RestartSec=10
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/root/botAfflite/deal_captures
+MemoryMax=650M
+
+[Install]
+WantedBy=multi-user.target

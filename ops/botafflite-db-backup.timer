@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily local PostgreSQL backup for BotAfflite
+
+[Timer]
+OnCalendar=*-*-* 02:15:00 UTC
+Persistent=true
+Unit=botafflite-db-backup.service
+
+[Install]
+WantedBy=timers.target

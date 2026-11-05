@@ -1,0 +1,17 @@
+[Unit]
+Description=BotAfflite daily price summary
+After=postgresql@18-main.service
+
+[Service]
+Type=oneshot
+User=botdeals
+Group=botdeals
+WorkingDirectory=/root/botAfflite
+EnvironmentFile=/root/botAfflite/deal.env
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/root/botAfflite/deal_venv/bin/python manage.py rollup_prices
+TimeoutStartSec=1h
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+MemoryMax=200M

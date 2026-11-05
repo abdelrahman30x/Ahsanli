@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily 48-hour BotAfflite OOM audit
+
+[Timer]
+OnCalendar=*-*-* 04:00:00 UTC
+Persistent=true
+Unit=botafflite-oom-audit.service
+
+[Install]
+WantedBy=timers.target

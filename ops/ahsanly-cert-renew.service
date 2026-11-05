@@ -1,0 +1,7 @@
+[Unit]
+Description=AHSANLY certificate renewal and Nginx reload
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/opt/certbot/bin/certbot renew --quiet --deploy-hook "systemctl reload nginx"

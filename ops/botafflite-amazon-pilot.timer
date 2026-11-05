@@ -1,0 +1,10 @@
+[Unit]
+Description=Amazon source pilot every 12 hours
+
+[Timer]
+OnCalendar=*-*-* 00,12:30:00 UTC
+Persistent=true
+Unit=botafflite-amazon-pilot.service
+
+[Install]
+WantedBy=timers.target

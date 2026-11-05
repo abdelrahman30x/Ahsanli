@@ -1,0 +1,7 @@
+[Unit]
+Description=Local PostgreSQL backup for BotAfflite
+After=postgresql@18-main.service
+
+[Service]
+Type=oneshot
+ExecStart=/root/botAfflite/ops/backup_postgres.sh

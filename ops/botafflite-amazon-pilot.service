@@ -1,0 +1,19 @@
+[Unit]
+Description=Bounded Amazon source reliability pilot
+After=network-online.target postgresql@18-main.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=botdeals
+Group=botdeals
+WorkingDirectory=/root/botAfflite
+EnvironmentFile=/root/botAfflite/deal.env
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/root/botAfflite/deal_venv/bin/python manage.py pilot_sources --retailer amazon_eg --limit 20
+TimeoutStartSec=1h
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/root/botAfflite/data/pilot
+MemoryMax=200M

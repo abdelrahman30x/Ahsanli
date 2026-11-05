@@ -1,0 +1,24 @@
+[Unit]
+Description=BotAfflite deal dashboard
+After=network-online.target postgresql@18-main.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=botdeals
+Group=botdeals
+WorkingDirectory=/root/botAfflite
+EnvironmentFile=/root/botAfflite/deal.env
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=HOME=/tmp
+ExecStart=/root/botAfflite/deal_venv/bin/gunicorn deal_system.wsgi:application --workers 1 --bind 127.0.0.1:8001 --timeout 60
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/root/botAfflite/deal_captures
+MemoryMax=230M
+
+[Install]
+WantedBy=multi-user.target

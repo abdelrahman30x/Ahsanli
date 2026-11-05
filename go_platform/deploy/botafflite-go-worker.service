@@ -1,0 +1,23 @@
+[Unit]
+Description=BotAfflite Go selected Amazon price worker
+After=network-online.target postgresql@18-main.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=botdeals
+Group=botdeals
+WorkingDirectory=/root/botAfflite
+EnvironmentFile=/root/botAfflite/deal.env
+ExecStart=/root/botAfflite/go_platform/bin/botafflite-worker --apply --live-candidates
+Restart=on-failure
+RestartSec=10
+MemoryMax=96M
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+[Install]
+WantedBy=multi-user.target

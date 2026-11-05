@@ -1,0 +1,8 @@
+[Unit]
+Description=Record 48-hour BotAfflite OOM evidence
+After=botafflite-web.service botafflite-go-worker.service botafflite-go-pipeline.service botafflite-go-api.service botafflite-next-preview.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/root/botAfflite
+ExecStart=/usr/bin/python3 /root/botAfflite/ops/audit_oom.py

@@ -1,0 +1,8 @@
+[Unit]
+Description=AHSANLY daily price rollup
+After=postgresql@18-main.service
+
+[Service]
+Type=oneshot
+User=postgres
+ExecStart=/usr/bin/psql -d ahsanly -f /srv/ahsanly/ops/ahsanly-price-rollup.sql

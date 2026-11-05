@@ -1,0 +1,8 @@
+[Unit]
+Description=Renew short-lived BotAfflite IP certificate
+After=network-online.target nginx.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/certbot/bin/certbot renew --quiet --deploy-hook "/bin/systemctl reload nginx"

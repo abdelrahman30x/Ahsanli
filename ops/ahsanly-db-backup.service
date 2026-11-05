@@ -1,0 +1,8 @@
+[Unit]
+Description=AHSANLY PostgreSQL daily backup
+After=postgresql@18-main.service
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/bin/bash /srv/ahsanly/ops/ahsanly-backup.sh

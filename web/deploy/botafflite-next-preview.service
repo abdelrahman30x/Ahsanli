@@ -1,0 +1,26 @@
+[Unit]
+Description=BotAfflite Next.js preview on loopback
+After=network-online.target botafflite-go-api.service
+Wants=network-online.target botafflite-go-api.service
+
+[Service]
+Type=simple
+User=botdeals
+Group=botdeals
+WorkingDirectory=/root/botAfflite/web_next
+Environment=NODE_ENV=production
+Environment=PORT=3001
+Environment=HOSTNAME=127.0.0.1
+Environment=API_INTERNAL_URL=http://127.0.0.1:8082
+ExecStart=/opt/botafflite-node/bin/node /root/botAfflite/web_next/server.js
+Restart=on-failure
+RestartSec=10
+MemoryMax=210M
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+[Install]
+WantedBy=multi-user.target

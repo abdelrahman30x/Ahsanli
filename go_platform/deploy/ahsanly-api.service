@@ -1,0 +1,26 @@
+[Unit]
+Description=AHSANLY Go read-only catalog API
+After=network-online.target postgresql@18-main.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=botdeals
+Group=botdeals
+WorkingDirectory=/srv/ahsanly
+EnvironmentFile=/etc/ahsanly/ahsanly.env
+Environment=DEAL_GO_LISTEN=127.0.0.1:8083
+Environment=AHSANLY_CAPTURE_DIR=/var/lib/ahsanly/captures
+ExecStart=/srv/ahsanly/go_platform/bin/ahsanly-api
+Restart=on-failure
+RestartSec=10
+MemoryMax=96M
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/var/lib/ahsanly/captures
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+[Install]
+WantedBy=multi-user.target

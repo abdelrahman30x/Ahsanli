@@ -1,0 +1,54 @@
+# Secrets and local configuration
+*.env
+.env
+!*.env.example
+settings.json
+settings.*.json
+!settings.example.json
+tracker_config.json
+deal-admin-password
+*.pem
+*.key
+server_ssh
+
+# Databases
+tracker.db
+*.sqlite3
+*.sqlite3-journal
+*.sqlite3-wal
+*.sqlite3-shm
+data/legacy_backups/
+data/pg_backups/
+
+# Build outputs
+go_platform/bin/
+go_platform/out/
+web/.next/
+web/out/
+web/node_modules/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# Captures and large data
+deal_captures/
+data/captures/
+data/test-photos/
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.mp4
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/

@@ -1,0 +1,7 @@
+[Unit]
+Description=Verify BotAfflite local PostgreSQL restore
+After=postgresql@18-main.service
+
+[Service]
+Type=oneshot
+ExecStart=/root/botAfflite/ops/restore_test_postgres.sh

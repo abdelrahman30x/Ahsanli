@@ -1,0 +1,24 @@
+[Unit]
+Description=BotAfflite Go read-only catalog API
+After=network-online.target postgresql@18-main.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=botdeals
+Group=botdeals
+WorkingDirectory=/root/botAfflite
+EnvironmentFile=/root/botAfflite/deal.env
+Environment=DEAL_GO_LISTEN=127.0.0.1:8082
+ExecStart=/root/botAfflite/go_platform/bin/botafflite-api
+Restart=on-failure
+RestartSec=10
+MemoryMax=96M
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+[Install]
+WantedBy=multi-user.target
