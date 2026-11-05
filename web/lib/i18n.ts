@@ -99,6 +99,10 @@ const ar = {
   allStores: 'كل المتاجر',
   allCountries: 'كل الدول',
   allCategories: 'كل الفئات',
+  menu: 'القائمة',
+  close: 'إغلاق',
+  mainNavigation: 'التنقل الرئيسي',
+  changeCountry: 'تغيير الدولة',
 };
 
 const en: Record<keyof typeof ar, string> = {
@@ -190,6 +194,10 @@ const en: Record<keyof typeof ar, string> = {
   allStores: 'All stores',
   allCountries: 'All countries',
   allCategories: 'All categories',
+  menu: 'Menu',
+  close: 'Close',
+  mainNavigation: 'Main navigation',
+  changeCountry: 'Change country',
 };
 
 export const dictionary: Record<Locale, typeof ar> = { ar, en };

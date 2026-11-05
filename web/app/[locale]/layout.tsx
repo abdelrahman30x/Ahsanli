@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { locales, direction, t, Locale } from "@/lib/i18n";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import MobileMenu from "@/components/MobileMenu";
 import { getCountryMeta, getMeta } from "@/lib/api";
 import "../globals.css";
 
@@ -49,13 +50,16 @@ export default async function LocaleLayout({ children, params }: { children: Rea
               <span>{t(lang, 'brand')}</span>
               <span className="brand-tagline">{t(lang, 'tagline')}</span>
             </Link>
-            <nav aria-label={lang === 'ar' ? 'القائمة الرئيسية' : 'Main navigation'}>
+            <nav className="desktop-nav" aria-label={lang === 'ar' ? 'القائمة الرئيسية' : 'Main navigation'}>
               <Link href={`/${lang}/`}>{t(lang, 'navProducts')}</Link>
               <Link href={`/${lang}/deals`}>{t(lang, 'navDeals')}</Link>
               <Link href={`/${lang}/about`}>{t(lang, 'navAbout')}</Link>
               {country?.telegram_url && <a href={country.telegram_url} target="_blank" rel="noopener noreferrer">{t(lang, 'navTelegram')} ↗</a>}
             </nav>
-            <LanguageSwitcher locale={lang} />
+            <div className="header-actions">
+              <LanguageSwitcher locale={lang} />
+              <MobileMenu locale={lang} countryName={countryName} telegramUrl={country?.telegram_url} />
+            </div>
           </header>
           {children}
           <footer>
