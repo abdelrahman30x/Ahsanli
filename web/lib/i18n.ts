@@ -123,6 +123,8 @@ const ar = {
   close: 'إغلاق',
   mainNavigation: 'التنقل الرئيسي',
   changeCountry: 'تغيير الدولة',
+  selectCountry: 'اختر الدولة',
+  currentCountry: 'الدولة الحالية',
 };
 
 const en: Record<keyof typeof ar, string> = {
@@ -238,6 +240,8 @@ const en: Record<keyof typeof ar, string> = {
   close: 'Close',
   mainNavigation: 'Main navigation',
   changeCountry: 'Change country',
+  selectCountry: 'Select Country',
+  currentCountry: 'Current Country',
 };
 
 export const dictionary: Record<Locale, typeof ar> = { ar, en };

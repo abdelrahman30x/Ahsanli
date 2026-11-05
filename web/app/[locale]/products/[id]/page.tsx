@@ -2,24 +2,40 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { dateTime, getDeal, money } from "@/lib/api";
+import { resolveCurrentCountry } from "@/lib/country";
 import { Locale, t } from "@/lib/i18n";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: Locale; id: string }> }): Promise<Metadata> {
   const { locale, id } = await params;
-  const deal = await getDeal('EG', id);
+  const resolved = await resolveCurrentCountry();
+  const deal = await getDeal(resolved.code, id);
   if (!deal) return { title: `${t(locale, 'productNotFound')} | ${t(locale, 'brand')}`, robots: { index: false } };
   const description = `${t(locale, 'verifiedPrice')}: ${money(deal.price, deal.currency, locale)} — ${t(locale, 'storeCaution')}`;
   return {
     title: `${deal.title} | ${deal.store_name} | ${t(locale, 'brand')}`,
     description,
-    alternates: { canonical: `https://eg.ahsanli.com/${locale}/products/${deal.id}`, languages: { 'ar-EG': `https://eg.ahsanli.com/ar/products/${deal.id}`, en: `https://eg.ahsanli.com/en/products/${deal.id}` } },
-    openGraph: { title: deal.title, description, url: `https://eg.ahsanli.com/${locale}/products/${deal.id}`, siteName: t(locale, 'brand'), locale: locale === 'ar' ? 'ar_EG' : 'en_US', type: 'website' },
+    alternates: {
+      canonical: `https://${resolved.hostname}/${locale}/products/${deal.id}`,
+      languages: {
+        [`ar-${resolved.code}`]: `https://${resolved.hostname}/ar/products/${deal.id}`,
+        en: `https://${resolved.hostname}/en/products/${deal.id}`,
+      },
+    },
+    openGraph: {
+      title: deal.title,
+      description,
+      url: `https://${resolved.hostname}/${locale}/products/${deal.id}`,
+      siteName: t(locale, 'brand'),
+      locale: locale === 'ar' ? 'ar_EG' : 'en_US',
+      type: 'website',
+    },
   };
 }
 
 export default async function ProductPage({ params }: { params: Promise<{ locale: Locale; id: string }> }) {
   const { locale, id } = await params;
-  const deal = await getDeal('EG', id);
+  const resolved = await resolveCurrentCountry();
+  const deal = await getDeal(resolved.code, id);
   if (!deal) notFound();
   const note = locale === 'ar' ? deal.editorial_note_ar : deal.editorial_note_en;
 

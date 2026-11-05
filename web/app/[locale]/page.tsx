@@ -1,15 +1,17 @@
 import Link from "next/link";
 import DealCard from "@/components/DealCard";
 import { listDeals, getCountryMeta } from "@/lib/api";
+import { resolveCurrentCountry } from "@/lib/country";
 import { Locale, t, direction } from "@/lib/i18n";
 
 type Params = { locale: Locale };
 
 export default async function Home({ params }: { params: Promise<Params> }) {
   const { locale } = await params;
-  const country = 'EG';
+  const resolved = await resolveCurrentCountry();
+  const country = resolved.code;
   const [countryMeta, deals] = await Promise.all([
-    getCountryMeta(country),
+    resolved.meta ? Promise.resolve(resolved.meta) : getCountryMeta(country),
     listDeals(country, { limit: "13" }),
   ]);
   const stores = (countryMeta?.retailers || []).filter(store => store.enabled);

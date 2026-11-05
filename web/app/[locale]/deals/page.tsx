@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import DealCard from "@/components/DealCard";
 import { getCountryMeta, listDeals } from "@/lib/api";
+import { resolveCurrentCountry } from "@/lib/country";
 import { Locale, t, direction } from "@/lib/i18n";
 
 type SearchParams = Record<string, string | string[] | undefined>;
@@ -9,23 +10,34 @@ function one(value: string | string[] | undefined) { return typeof value === "st
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: Locale }> }): Promise<Metadata> {
   const { locale } = await params;
+  const resolved = await resolveCurrentCountry();
   return {
     title: `${t(locale, 'navDeals')} | ${t(locale, 'brand')}`,
     description: t(locale, 'dealsIntro'),
-    alternates: { canonical: `https://eg.ahsanli.com/${locale}/deals`, languages: { 'ar-EG': 'https://eg.ahsanli.com/ar/deals', en: 'https://eg.ahsanli.com/en/deals' } },
+    alternates: {
+      canonical: `https://${resolved.hostname}/${locale}/deals`,
+      languages: {
+        [`ar-${resolved.code}`]: `https://${resolved.hostname}/ar/deals`,
+        en: `https://${resolved.hostname}/en/deals`
+      }
+    },
   };
 }
 
 export default async function Deals({ params, searchParams }: { params: Promise<{ locale: Locale }>; searchParams: Promise<SearchParams> }) {
   const { locale } = await params;
   const raw = await searchParams;
-  const country = 'EG';
+  const resolved = await resolveCurrentCountry();
+  const country = resolved.code;
   const store = one(raw.store), category = one(raw.category), cursor = one(raw.cursor);
   const query: Record<string, string> = { limit: "24" };
   if (store) query.store = store;
   if (category) query.category = category;
   if (cursor) query.cursor = cursor;
-  const [deals, countryMeta] = await Promise.all([listDeals(country, query), getCountryMeta(country)]);
+  const [deals, countryMeta] = await Promise.all([
+    listDeals(country, query),
+    resolved.meta ? Promise.resolve(resolved.meta) : getCountryMeta(country),
+  ]);
   const stores = (countryMeta?.retailers || []).filter(item => item.enabled);
   const categories = countryMeta?.categories || [];
   const dir = direction(locale);

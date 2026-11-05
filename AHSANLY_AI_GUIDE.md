@@ -218,15 +218,15 @@ If no deal exists, the page renders an honest empty state. It does not replace d
 
 The deal detail page adds seller, exact store, editorial note, evidence facts, shipping exclusion, and the verified affiliate/store link. Public history charts are intentionally removed. Historical observations remain in PostgreSQL for internal evidence and debugging.
 
-## Localization
+## Country switching and localization
 
 `web/lib/i18n.ts` defines `ar` and `en`, direction, and all shared interface strings. Add new keys to the Arabic object first and mirror them in the typed English object. Do not translate retailer-supplied product titles.
 
-The language switcher preserves the current path and query while replacing only the leading locale. The mobile drawer contains deals, stores, selection policy, about, Telegram, and country switching. Closed drawer content is removed from display to avoid off-screen overflow and keyboard focus.
+The country switcher dropdown (`web/components/CountrySwitcher.tsx`) displays the active country flag and triggers a dropdown with all supported Middle East countries and their dedicated subdomains (EG `eg.`, SA `sa.`, JO `jo.`, AE `ae.`, KW `kw.`, OM `om.`, BH `bh.`, QA `qa.`, IQ `iq.`). The language switcher preserves the current path and query while replacing only the leading locale. The mobile drawer contains deals, stores, selection policy, about, Telegram, and country switching with flag previews. Closed drawer content is removed from display to avoid off-screen overflow and keyboard focus.
 
 ## Metadata and sharing
 
-Localized layouts emit canonical URLs and reciprocal `ar-EG`/`en` hreflang links. Deals and deal detail pages add their own canonical/alternate links; deal detail also emits Open Graph metadata. Only currently public approved deals should be indexed or included in future sitemap additions. Missing/expired deals return noindex/not-found behavior rather than presenting stale content as current.
+Localized layouts emit canonical URLs and reciprocal `ar-{COUNTRY}`/`en` hreflang links based on the active country subdomain. Deals and deal detail pages add their own canonical/alternate links; deal detail also emits Open Graph metadata. Only currently public approved deals should be indexed or included in future sitemap additions. Missing/expired deals return noindex/not-found behavior rather than presenting stale content as current.
 
 ## Styling and assets
 
