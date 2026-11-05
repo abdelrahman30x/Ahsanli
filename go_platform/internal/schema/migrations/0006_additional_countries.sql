@@ -21,10 +21,10 @@ ON CONFLICT (code) DO UPDATE SET
     default_locale = EXCLUDED.default_locale,
     enabled_public_site = EXCLUDED.enabled_public_site;
 
--- Create default core_dealrule for each newly added country
+-- Create default core_dealrule for each newly added country with unique rule name
 INSERT INTO core_dealrule (name, country_id, historical_percent, cross_store_percent, cooldown_hours, freshness_hours, version, enabled, cash_floor_10000_plus, cash_floor_under_10000, cash_floor_under_2000, cash_floor_under_500)
 SELECT
-    'default',
+    'default_' || lower(c.code),
     c.id,
     10.00,
     5.00,
