@@ -1,0 +1,10 @@
+[Unit]
+Description=AHSANLY tested GitHub release deployment
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/ahsanly-deploy
+TimeoutStartSec=300
+Nice=10

@@ -79,6 +79,50 @@ ss -ltn | grep -E ':80 |:443 '
 runuser -u postgres -- psql -d ahsanly -c "SELECT count(*) FROM core_offerobservation WHERE observed_at >= now() - interval '1 hour' AND imported=false;"
 ```
 
+## Automatic deployment from GitHub
+
+`main` is built by GitHub Actions; do not build the routine release on this 1 GB VPS. Each successful workflow publishes an immutable `deploy-<full-commit>` release containing `ahsanly-linux-amd64.tar.gz` and `manifest.json`. The manifest identifies the commit and the bundle SHA-256.
+
+The VPS polls the public repository's latest release every two minutes through `ahsanly-deploy.timer`. `/usr/local/sbin/ahsanly-deploy` is the installed copy of `ops/ahsanly-deploy.sh`. A new revision is deployed as follows:
+
+1. Download and verify the bundle checksum and safe archive paths.
+2. Validate all four application binaries and `web_next/server.js`.
+3. Run `ops/ahsanly-backup.sh` and apply embedded Go migrations.
+4. Move the payload to `/srv/ahsanly/releases/<commit>` and atomically switch `/srv/ahsanly/go_platform` and `/srv/ahsanly/web_next` symlinks.
+5. Restart `ahsanly-api`, `ahsanly-web`, `ahsanly-worker`, and `ahsanly-pipeline`; there is never a second worker or publisher.
+6. Check unit state plus local API and web health. On failure, restore the previous symlinks and restart the previous code without restoring an old database.
+
+The release does not contain environment secrets, Nginx configuration, captures, or database dumps. Update those through the normal operational procedures.
+
+```bash
+# Current state and deployment logs
+cat /var/lib/ahsanly/deploy/current-revision
+systemctl list-timers ahsanly-deploy.timer
+journalctl -u ahsanly-deploy.service -n 100 --no-pager
+
+# Run a poll immediately
+systemctl start ahsanly-deploy.service
+
+# Temporarily stop automatic deployments
+systemctl disable --now ahsanly-deploy.timer
+systemctl enable --now ahsanly-deploy.timer
+```
+
+For manual code rollback, choose an existing release directory, switch both symlinks, and restart the same four units:
+
+```bash
+revision=<full-commit>
+test -x /srv/ahsanly/releases/$revision/go_platform/bin/ahsanly-api
+ln -sfn /srv/ahsanly/releases/$revision/go_platform /srv/ahsanly/go_platform.next
+mv -Tf /srv/ahsanly/go_platform.next /srv/ahsanly/go_platform
+ln -sfn /srv/ahsanly/releases/$revision/web_next /srv/ahsanly/web_next.next
+mv -Tf /srv/ahsanly/web_next.next /srv/ahsanly/web_next
+systemctl restart ahsanly-api ahsanly-web ahsanly-worker ahsanly-pipeline
+printf '%s\n' "$revision" > /var/lib/ahsanly/deploy/current-revision
+```
+
+Disable the timer before a manual rollback if the newer release should not immediately return. Code rollback never discards observations and does not reverse schema migrations; keep migrations backward-compatible with the previous release.
+
 ## Cutover / rollback
 
 See `../AGENTS.md` for the full cutover and rollback commands. The key rule: stop old worker/pipeline before the final `pg_dump`, restore into `ahsanly`, apply migrations, then start AHSANLY services and switch Nginx. Never restore an old dump over newer observations.

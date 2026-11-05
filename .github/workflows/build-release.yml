@@ -1,0 +1,91 @@
+name: Build production release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ahsanly-production-release
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go_platform/go.mod
+          cache-dependency-path: go_platform/go.sum
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Test Go
+        working-directory: go_platform
+        run: go test ./...
+
+      - name: Build Linux Go binaries
+        working-directory: go_platform
+        run: |
+          mkdir -p ../package/go_platform/bin
+          for command in api migrate pipeline worker; do
+            CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+              go build -trimpath -ldflags='-s -w' \
+              -o "../package/go_platform/bin/ahsanly-${command}" "./cmd/${command}"
+          done
+
+      - name: Install web dependencies
+        working-directory: web
+        run: npm ci
+
+      - name: Build Next.js
+        working-directory: web
+        run: npm run build
+
+      - name: Package Next.js standalone server
+        working-directory: web
+        run: |
+          mkdir -p ../package/web_next
+          cp -a .next/standalone/. ../package/web_next/
+          mkdir -p ../package/web_next/.next
+          cp -a .next/static ../package/web_next/.next/static
+          cp -a public ../package/web_next/public
+          test -f ../package/web_next/server.js
+
+      - name: Create release bundle and manifest
+        run: |
+          mkdir -p dist
+          tar -czf dist/ahsanly-linux-amd64.tar.gz -C package .
+          bundle_sha=$(sha256sum dist/ahsanly-linux-amd64.tar.gz | cut -d' ' -f1)
+          jq -n \
+            --arg revision "$GITHUB_SHA" \
+            --arg built_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --arg bundle_sha256 "$bundle_sha" \
+            '{revision: $revision, built_at: $built_at, bundle_sha256: $bundle_sha256}' \
+            > dist/manifest.json
+
+      - name: Publish immutable GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          tag="deploy-${GITHUB_SHA}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" dist/ahsanly-linux-amd64.tar.gz dist/manifest.json --clobber
+            gh release edit "$tag" --latest
+          else
+            gh release create "$tag" \
+              dist/ahsanly-linux-amd64.tar.gz dist/manifest.json \
+              --title "Deployment ${GITHUB_SHA::12}" \
+              --notes "Automated tested build for ${GITHUB_SHA}. The VPS deploy timer installs the latest release." \
+              --latest
+          fi

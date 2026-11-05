@@ -26,6 +26,24 @@ Nginx serves the new site from `/etc/nginx/sites-available/ahsanly`. Old `134.12
 
 The user chose to keep the existing Egypt Telegram channel and its old bot token, not create a new `@AhsanlyBot`. The channel title was renamed to **"أحسنلي | عروض مصر"**; its public handle remains the previous one. The new AHSANLY environment uses `DEAL_TELEGRAM_TOKEN_AHSANLY_BOT` in `/etc/ahsanly/ahsanly.env`, copied from the old protected env. One labelled test photo was sent as Telegram message `1831` after cutover.
 
+## GitHub build and automatic deployment
+
+Source: `https://github.com/abdelrahman30x/Ahsanli` (`main`). Every push runs `.github/workflows/build-release.yml`: Go tests, Linux AMD64 binaries, and the Next.js standalone build. A successful workflow publishes `deploy-<commit>` as the latest GitHub release with a bundle and SHA-256 manifest.
+
+On the VPS, `ahsanly-deploy.timer` runs `/usr/local/sbin/ahsanly-deploy` every two minutes. It downloads only a new release, verifies its checksum, takes a PostgreSQL backup, applies embedded Go migrations, switches versioned symlinks under `/srv/ahsanly/releases/`, restarts the four application units, and rolls back the code symlinks if local health checks fail. It does not replace `/etc/ahsanly/ahsanly.env`, systemd units, Nginx, captures, or the database with an old snapshot.
+
+```bash
+systemctl status ahsanly-deploy.timer ahsanly-deploy.service
+cat /var/lib/ahsanly/deploy/current-revision
+journalctl -u ahsanly-deploy.service -n 80 --no-pager
+# Pause automatic code deployment during maintenance:
+systemctl disable --now ahsanly-deploy.timer
+# Resume:
+systemctl enable --now ahsanly-deploy.timer
+```
+
+Keep only one worker and one pipeline active. Deployment never enables the legacy BotAfflite units or changes the Amazon request cap.
+
 ## Operational limits (unchanged)
 
 - Amazon source cap remains **120 requests/hour** with six-hour blocked-source backoff.

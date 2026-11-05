@@ -1,0 +1,11 @@
+[Unit]
+Description=AHSANLY GitHub release polling timer
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=2min
+RandomizedDelaySec=15s
+Persistent=true
+
+[Install]
+WantedBy=timers.target
