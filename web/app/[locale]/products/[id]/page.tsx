@@ -39,7 +39,7 @@ export default async function ProductPage({ params }: { params: Promise<{ locale
     </div>
     <section className="detail-hero">
       <div className="detail-media">
-        {p.image_url ? <img src={p.image_url} alt={p.title} referrerPolicy="no-referrer" /> : <div className="detail-placeholder">{p.store === "amazon_eg" ? "A" : p.store === "noon_eg" ? "N" : "J"}</div>}
+        {p.image_url ? <img src={`/api/proxy-image?url=${encodeURIComponent(p.image_url)}`} alt={p.title} /> : <div className="detail-placeholder">{p.store === "amazon_eg" ? "A" : p.store === "noon_eg" ? "N" : "J"}</div>}
       </div>
       <div className="detail-copy">
         <div className="detail-tags">

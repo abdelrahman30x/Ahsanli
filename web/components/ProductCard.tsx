@@ -8,7 +8,7 @@ export default function ProductCard({ product, locale }: { product: Product; loc
   const statusText = product.fresh ? t(locale, 'verifiedPrice') : product.imported ? t(locale, 'importedPrice') : t(locale, 'stalePrice');
   return <article className="product-card">
     <Link href={`/${locale}/products/${product.id}`} className="product-image" aria-label={`${locale === 'ar' ? 'تفاصيل' : 'Details of'} ${product.title}`}>
-      {product.image_url ? <img src={product.image_url} alt="" loading="lazy" referrerPolicy="no-referrer" /> : <span className="image-placeholder">{initial}<small>{locale === 'ar' ? 'الصورة غير متاحة' : 'No image'}</small></span>}
+      {product.image_url ? <img src={`/api/proxy-image?url=${encodeURIComponent(product.image_url)}`} alt="" loading="lazy" /> : <span className="image-placeholder">{initial}<small>{locale === 'ar' ? 'الصورة غير متاحة' : 'No image'}</small></span>}
       {product.drop_percent && product.fresh && <span className="discount-chip">↓ {Number(product.drop_percent).toFixed(1)}%</span>}
     </Link>
     <div className="product-content">
