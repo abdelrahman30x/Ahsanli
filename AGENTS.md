@@ -2,6 +2,10 @@
 
 **Cutover completed:** 2026-11-05. AHSANLY | أحسنلي is the live public brand at `ahsanli.com`. Egypt is the first country at `eg.ahsanli.com/ar/` and `/en/`.
 
+## Comprehensive documentation and AI handoff
+
+The canonical English project reference is the numbered section library in `docs/`. The standalone `AHSANLY_AI_GUIDE.md` combines all sections and is intended to be sufficient for another AI to understand and safely extend the project. After editing any section, run `python docs/build_docs.py` and commit the regenerated file. CI enforces this with `python docs/build_docs.py --check`. Historical notes elsewhere in the repository are not authoritative current state.
+
 ## Live state
 
 | Component | Service / path | Bind |

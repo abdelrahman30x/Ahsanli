@@ -1,6 +1,6 @@
 # AHSANLY server operations
 
-Last verified: 2026-11-05.
+Last verified: 2026-11-05. For the comprehensive current reference and AI handoff, see `../docs/` and `../AHSANLY_AI_GUIDE.md`; historical commands below are not the routine deployment process.
 
 ## Current state
 

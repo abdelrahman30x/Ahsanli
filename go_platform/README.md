@@ -1,5 +1,7 @@
 # Go platform (incremental cutover)
 
+> Current comprehensive reference: `docs/` and the generated `AHSANLY_AI_GUIDE.md`. Older operational narratives below are retained for history and may contain superseded service names, caps, or states.
+
 **2026-11-04 live note:** 63,060 Amazon listings are currently Go-owned on the VPS; the legacy publisher is stopped. The retailer cap is 120 requests/hour while a six-hour backoff from the 14:29 UTC source block is active. This supersedes the smaller watchlist counts below. The HTTP fetcher verifies TLS and keeps its ALPN matched to HTTP/1.1 or HTTP/2; Chrome-like headers do not guarantee that Amazon will allow requests. See [server operations](../ops/SERVER.md) before changing the cap or deploying.
 
 The optional [Surf comparison pilot](experiments/surfprobe/README.md) is isolated from the live worker. Its review and promotion criteria are in [Surf review](../ops/SURF_REVIEW.md).

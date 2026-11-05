@@ -1,5 +1,7 @@
 # AHSANLY web
 
+For the complete current architecture and extension rules, see `docs/` or the standalone `AHSANLY_AI_GUIDE.md` at the repository root.
+
 Bilingual, mobile-first Next.js storefront for editorially selected store deals. The public home and archive contain only fresh, screenshot-verified offers approved by staff; they do not expose general catalog search or cross-store comparison. Product titles remain retailer-supplied, while navigation, evidence explanations, metadata, and editorial notes support Arabic RTL and English LTR.
 
 ```powershell
