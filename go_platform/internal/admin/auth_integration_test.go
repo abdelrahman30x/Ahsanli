@@ -281,6 +281,52 @@ VALUES($1,$2,$3,false) RETURNING id`, countryID, channelID, retailerID).Scan(&ro
 	if activated := channelToggle(); activated.Code != http.StatusOK {
 		t.Fatalf("channel activation failed: %d %s", activated.Code, activated.Body.String())
 	}
+	var observationID, candidateID int64
+	if err = pool.QueryRow(ctx, `INSERT INTO core_offerobservation(listing_id,price,currency,seller,stock_status,source,observed_at,imported,legacy_source)
+ VALUES($1,85,'EGP','Amazon.eg','in_stock','go_http',now(),false,'') RETURNING id`, listingID).Scan(&observationID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = pool.Exec(ctx, `INSERT INTO core_currentoffer(listing_id,observation_id,updated_at) VALUES($1,$2,now())`, listingID, observationID); err != nil {
+		t.Fatal(err)
+	}
+	if err = pool.QueryRow(ctx, `INSERT INTO core_dealcandidate(winning_observation_id,compared_observations,historical_baseline,rule_version,reason,percent,state,evidence_path,evidence_price,evidence_seller,capture_retries,created_at)
+ VALUES($1,'[]'::jsonb,100,2,'historical',15,'review','/tmp/integration-evidence.png',85,'Amazon.eg',0,now()) RETURNING id`, observationID).Scan(&candidateID); err != nil {
+		t.Fatal(err)
+	}
+	candidateReview := func() *httptest.ResponseRecorder {
+		request := httptest.NewRequest("PATCH", fmt.Sprintf("https://134.122.89.95/api/v1/admin/candidates/%d", candidateID),
+			bytes.NewBufferString(`{"decision":"approved","featured":true,"editorial_note_ar":"اختيار اختباري","editorial_note_en":"Integration pick"}`))
+		request.AddCookie(cookies[0])
+		request.Header.Set("Origin", s.Origin)
+		request.Header.Set("X-CSRF-Token", result.CSRF)
+		response := httptest.NewRecorder()
+		mux.ServeHTTP(response, request)
+		return response
+	}
+	if ineligible := candidateReview(); ineligible.Code != http.StatusConflict {
+		t.Fatalf("ineligible candidate was approved: %d %s", ineligible.Code, ineligible.Body.String())
+	}
+	if _, err = pool.Exec(ctx, `UPDATE core_retailer SET publish_enabled=true WHERE id=$1`, retailerID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = pool.Exec(ctx, `UPDATE core_listing SET extracted_attributes='{"go_owned":true}'::jsonb WHERE id=$1`, listingID); err != nil {
+		t.Fatal(err)
+	}
+	if approved := candidateReview(); approved.Code != http.StatusOK {
+		t.Fatalf("editorial approval failed: %d %s", approved.Code, approved.Body.String())
+	}
+	var reviewerID int64
+	var featured bool
+	var note string
+	if err = pool.QueryRow(ctx, `SELECT reviewer_id,featured,editorial_note_ar FROM core_dealcandidate WHERE id=$1 AND state='approved' AND reviewed_at IS NOT NULL`, candidateID).Scan(&reviewerID, &featured, &note); err != nil || reviewerID != userID || !featured || note == "" {
+		t.Fatalf("editorial review was not recorded: %v", err)
+	}
+	if replayed := candidateReview(); replayed.Code != http.StatusConflict {
+		t.Fatalf("candidate approval replay accepted: %d", replayed.Code)
+	}
+	if err = pool.QueryRow(ctx, `SELECT count(*) FROM core_auditevent WHERE action='go_review_deal_candidate' AND actor_id=$1`, userID).Scan(&auditCount); err != nil || auditCount != 1 {
+		t.Fatalf("candidate review not audited: %d, %v", auditCount, err)
+	}
 	replay := httptest.NewRequest("POST", "https://134.122.89.95/api/v1/admin/session", bytes.NewReader(payload))
 	replay.Header.Set("Origin", s.Origin)
 	replayResponse := httptest.NewRecorder()

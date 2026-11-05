@@ -54,6 +54,8 @@ func (s *Service) Register(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/v1/admin/routes", s.createRoute)
 	mux.HandleFunc("PATCH /api/v1/admin/routes/{id}", s.updateRoute)
 	mux.HandleFunc("GET /api/v1/admin/candidates", s.candidates)
+	mux.HandleFunc("PATCH /api/v1/admin/candidates/{id}", s.reviewCandidate)
+	mux.HandleFunc("GET /api/v1/admin/candidates/{id}/evidence", s.candidateEvidence)
 	mux.HandleFunc("GET /api/v1/admin/matches", s.matches)
 	mux.HandleFunc("PATCH /api/v1/admin/matches/{id}", s.reviewMatch)
 	mux.HandleFunc("GET /api/v1/admin/publications", s.publications)

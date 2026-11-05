@@ -370,11 +370,15 @@ func (s *Service) candidates(w http.ResponseWriter, r *http.Request) {
 	page, offset := pageLimit(r)
 	ctx, cancel := requestContext(r)
 	defer cancel()
-	rows, err := s.DB.Query(ctx, `SELECT d.id,l.id,r.code,l.title,o.price::text,d.percent::text,d.state,d.reason,
-d.created_at,d.evidence_path<>'' FROM core_dealcandidate d
+	rows, err := s.DB.Query(ctx, `SELECT d.id,l.id,r.code,COALESCE(NULLIF(r.display_name_ar,''),r.code),c.code,
+l.title,o.price::text,o.currency,o.seller,o.observed_at,d.percent::text,d.state,d.reason,
+d.created_at,d.evidence_path<>'',d.evidence_discount::text,d.featured,d.editorial_note_ar,d.editorial_note_en,
+(NOT o.imported AND o.stock_status='in_stock' AND o.observed_at>=now()-interval '2 hours')
+ FROM core_dealcandidate d
 JOIN core_offerobservation o ON o.id=d.winning_observation_id
 JOIN core_listing l ON l.id=o.listing_id JOIN core_retailer r ON r.id=l.retailer_id
-ORDER BY d.id DESC LIMIT 51 OFFSET $1`, offset)
+JOIN core_country c ON c.id=r.country_id
+ORDER BY CASE WHEN d.state='review' THEN 0 ELSE 1 END,d.id DESC LIMIT 51 OFFSET $1`, offset)
 	if err != nil {
 		adminJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "candidates unavailable"})
 		return
@@ -383,15 +387,21 @@ ORDER BY d.id DESC LIMIT 51 OFFSET $1`, offset)
 	items := []map[string]any{}
 	for rows.Next() {
 		var id, listingID int64
-		var store, title, price, percent, state, reason string
-		var created time.Time
-		var evidence bool
-		if err = rows.Scan(&id, &listingID, &store, &title, &price, &percent, &state, &reason, &created, &evidence); err != nil {
+		var store, storeName, country, title, price, currency, seller, percent, state, reason string
+		var created, observed time.Time
+		var evidence, featured, eligible bool
+		var discount *string
+		var noteAR, noteEN string
+		if err = rows.Scan(&id, &listingID, &store, &storeName, &country, &title, &price, &currency, &seller,
+			&observed, &percent, &state, &reason, &created, &evidence, &discount, &featured, &noteAR, &noteEN, &eligible); err != nil {
 			break
 		}
-		items = append(items, map[string]any{"id": id, "listing_id": listingID, "store": store,
-			"title": title, "price": price, "percent": percent, "state": state,
-			"reason": reason, "created_at": created, "has_evidence": evidence})
+		items = append(items, map[string]any{"id": id, "listing_id": listingID, "store": store, "store_name": storeName,
+			"country": country, "title": title, "price": price, "currency": currency, "seller": seller,
+			"observed_at": observed, "percent": percent, "state": state, "reason": reason, "created_at": created,
+			"has_evidence": evidence, "evidence_url": fmt.Sprintf("/api/v1/admin/candidates/%d/evidence", id),
+			"displayed_discount": discount, "featured": featured, "editorial_note_ar": noteAR,
+			"editorial_note_en": noteEN, "eligible": eligible})
 	}
 	if err != nil || rows.Err() != nil {
 		adminJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "candidates unavailable"})

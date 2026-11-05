@@ -15,7 +15,7 @@ import (
 
 func main() {
 	apply := flag.Bool("apply", false, "allow one gated outbox operation")
-	prepare := flag.Bool("prepare", false, "prepare one captured candidate for routed channels")
+	prepare := flag.Bool("prepare", false, "prepare one editorially approved candidate for routed channels")
 	send := flag.Bool("send", false, "send one pending verified photo")
 	recoverUncertain := flag.Bool("recover-uncertain", false, "hold expired sending records for manual review")
 	captureDir := flag.String("capture-dir", "", "directory containing verified evidence PNGs")

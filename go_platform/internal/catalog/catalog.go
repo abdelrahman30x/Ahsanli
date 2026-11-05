@@ -181,7 +181,7 @@ func (s *Store) Close() {
 	}
 }
 
-const selectProduct = `SELECT l.id, COALESCE(NULLIF(l.title,''),l.retailer_product_id), l.retailer_product_id,
+const selectProductFields = `SELECT l.id, COALESCE(NULLIF(l.title,''),l.retailer_product_id), l.retailer_product_id,
  r.code, COALESCE(NULLIF(r.display_name_ar,''),r.code), COALESCE(c.code,''), COALESCE(c.name_ar,''), r.currency,
  o.price::text, o.seller, o.observed_at, COALESCE(o.imported,true),
  (o.id IS NOT NULL AND NOT o.imported AND o.stock_status='in_stock' AND r.enabled AND COALESCE(c.enabled,false) AND o.observed_at>=now()-interval '2 hours'),
@@ -193,13 +193,14 @@ const selectProduct = `SELECT l.id, COALESCE(NULLIF(l.title,''),l.retailer_produ
  AND ch.country_id=r.country_id AND EXISTS
  (SELECT 1 FROM core_publicationroute pr WHERE pr.channel_id=ch.id AND pr.enabled
  AND pr.country_id=r.country_id AND (pr.retailer_id IS NULL OR pr.retailer_id=r.id))
- ORDER BY a.id LIMIT 1), l.original_url) END
- FROM core_listing l JOIN core_retailer r ON r.id=l.retailer_id LEFT JOIN core_country c ON c.id=r.country_id
+ ORDER BY a.id LIMIT 1), l.original_url) END`
+const selectProductFrom = ` FROM core_listing l JOIN core_retailer r ON r.id=l.retailer_id LEFT JOIN core_country c ON c.id=r.country_id
  LEFT JOIN core_currentoffer co ON co.listing_id=l.id
  LEFT JOIN core_offerobservation o ON o.id=co.observation_id
  LEFT JOIN LATERAL (SELECT d.percent FROM core_dealcandidate d WHERE d.winning_observation_id=o.id AND d.reason='historical'
- AND d.state IN ('captured','queued') AND d.evidence_path<>'' AND d.evidence_price=o.price AND d.evidence_seller=o.seller
+ AND d.state IN ('approved','queued') AND d.evidence_path<>'' AND d.evidence_price=o.price AND d.evidence_seller=o.seller
  ORDER BY d.id DESC LIMIT 1) dc ON true`
+const selectProduct = selectProductFields + selectProductFrom
 
 func scanProduct(rows pgx.Rows) (Product, error) {
 	var p Product
@@ -413,14 +414,14 @@ func (s *Store) List(ctx context.Context, f Filter) (Page, error) {
 	return page, nil
 }
 
-// A drop is a recorded, directly verified candidate for the current offer.
+// A public drop is an editorially approved, directly verified candidate for the current offer.
 func (s *Store) listDrops(ctx context.Context, f Filter) (Page, error) {
 	cursor, err := decodeCursor(f.Cursor)
 	if err != nil {
 		return Page{}, errors.New("invalid cursor")
 	}
 	args := []any{}
-	where := []string{"d.reason='historical'", "d.state IN ('captured','queued')", "d.evidence_path<>''", "d.evidence_price=o.price", "d.evidence_seller=o.seller", "NOT o.imported", "o.stock_status='in_stock'", "o.observed_at>=now()-interval '2 hours'", "r.enabled", "c.enabled", "c.enabled_public_site"}
+	where := []string{"d.reason='historical'", "d.state IN ('approved','queued')", "d.evidence_path<>''", "d.evidence_price=o.price", "d.evidence_seller=o.seller", "NOT o.imported", "o.stock_status='in_stock'", "o.observed_at>=now()-interval '2 hours'", "r.enabled", "c.enabled", "c.enabled_public_site"}
 	where = append(where, "d.id=(SELECT max(d2.id) FROM core_dealcandidate d2 WHERE d2.winning_observation_id=o.id AND d2.reason='historical')")
 	if q := strings.TrimSpace(f.Query); q != "" {
 		args = append(args, "%"+q+"%")
@@ -555,7 +556,9 @@ FROM core_retailer r WHERE r.country_id=(SELECT id FROM core_country WHERE code=
 		}
 		m.Retailers = append(m.Retailers, rm)
 	}
-	if err = retailers.Err(); err != nil { return nil, err }
+	if err = retailers.Err(); err != nil {
+		return nil, err
+	}
 	cats, err := s.DB.Query(ctx, `SELECT cat.code,cat.name_ar,cat.name_en FROM core_category cat
 WHERE EXISTS (SELECT 1 FROM core_listing l JOIN core_retailer r ON r.id=l.retailer_id JOIN core_country c ON c.id=r.country_id
 WHERE l.category_id=cat.id AND c.code=$1) ORDER BY cat.position`, code)

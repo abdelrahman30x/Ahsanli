@@ -50,11 +50,11 @@ export default async function LocaleLayout({ children, params }: { children: Rea
               <span>{t(lang, 'brand')}</span>
               <span className="brand-tagline">{t(lang, 'tagline')}</span>
             </Link>
-            <nav className="desktop-nav" aria-label={lang === 'ar' ? 'القائمة الرئيسية' : 'Main navigation'}>
-              <Link href={`/${lang}/`}>{t(lang, 'navProducts')}</Link>
+            <nav className="desktop-nav" aria-label={t(lang, 'mainNavigation')}>
               <Link href={`/${lang}/deals`}>{t(lang, 'navDeals')}</Link>
-              <Link href={`/${lang}/about`}>{t(lang, 'navAbout')}</Link>
-              {country?.telegram_url && <a href={country.telegram_url} target="_blank" rel="noopener noreferrer">{t(lang, 'navTelegram')} ↗</a>}
+              <Link href={`/${lang}/#stores`}>{t(lang, 'navStores')}</Link>
+              <Link href={`/${lang}/#how`}>{t(lang, 'navHow')}</Link>
+              {country?.telegram_url && <a className="nav-telegram" href={country.telegram_url} target="_blank" rel="noopener noreferrer">{t(lang, 'navTelegram')} ↗</a>}
             </nav>
             <div className="header-actions">
               <LanguageSwitcher locale={lang} />

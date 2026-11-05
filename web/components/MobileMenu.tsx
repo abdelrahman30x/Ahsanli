@@ -64,17 +64,21 @@ export default function MobileMenu({
         </div>
 
         <nav aria-label={t(locale, "mainNavigation")}>
-          <Link href={`/${locale}/`} onClick={close}>
-            {t(locale, "navProducts")}
-          </Link>
           <Link href={`/${locale}/deals`} onClick={close}>
             {t(locale, "navDeals")}
+          </Link>
+          <Link href={`/${locale}/#stores`} onClick={close}>
+            {t(locale, "navStores")}
+          </Link>
+          <Link href={`/${locale}/#how`} onClick={close}>
+            {t(locale, "navHow")}
           </Link>
           <Link href={`/${locale}/about`} onClick={close}>
             {t(locale, "navAbout")}
           </Link>
           {telegramUrl && (
             <a
+              className="mobile-telegram-link"
               href={telegramUrl}
               target="_blank"
               rel="noopener noreferrer"

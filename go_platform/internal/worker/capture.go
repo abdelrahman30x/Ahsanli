@@ -147,7 +147,7 @@ func (r *Runner) RunCaptureOnce(ctx context.Context, browserPath, outputDir stri
 	if evidence.LimitedStock > 0 {
 		stock = evidence.LimitedStock
 	}
-	tag, err := tx.Exec(ctx, `UPDATE core_dealcandidate SET state='captured',capture_lease_until=NULL,
+	tag, err := tx.Exec(ctx, `UPDATE core_dealcandidate SET state='review',capture_lease_until=NULL,
  evidence_path=$2,evidence_price=$3::numeric,evidence_seller=$4,evidence_discount=$5::numeric,limited_stock=$6
  WHERE id=$1 AND state='capturing' AND capture_lease_until>now()`, j.ID, output, j.Price, evidence.Seller, discount, stock)
 	if err != nil {

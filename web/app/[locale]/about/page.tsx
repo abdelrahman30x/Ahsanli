@@ -11,7 +11,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: L
 
 export default async function About({ params }: { params: Promise<{ locale: Locale }> }) {
   const { locale } = await params;
-  return <main className="catalog-section standalone-page">
+  return <main className="standalone-page">
     <div className="section-heading">
       <div>
         <span className="section-kicker">{t(locale, 'navAbout')}</span>

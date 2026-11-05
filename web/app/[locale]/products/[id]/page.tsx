@@ -1,93 +1,56 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import PriceChart from "@/components/PriceChart";
-import { dateTime, getProduct, money } from "@/lib/api";
+import { dateTime, getDeal, money } from "@/lib/api";
 import { Locale, t } from "@/lib/i18n";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: Locale; id: string }> }): Promise<Metadata> {
   const { locale, id } = await params;
-  const detail = await getProduct('EG', id);
-  if (!detail) return { title: `${t(locale, 'productNotFound')} | ${t(locale, 'brand')}`, robots: { index: false } };
-  const p = detail.product;
+  const deal = await getDeal('EG', id);
+  if (!deal) return { title: `${t(locale, 'productNotFound')} | ${t(locale, 'brand')}`, robots: { index: false } };
+  const description = `${t(locale, 'verifiedPrice')}: ${money(deal.price, deal.currency, locale)} — ${t(locale, 'storeCaution')}`;
   return {
-    title: `${p.title} | ${p.store_name} | ${t(locale, 'brand')}`,
-    description: `${p.imported ? t(locale, 'importedPrice') : t(locale, 'verifiedPrice')}: ${money(p.price, p.currency, locale)} — ${t(locale, 'storeCaution')}`,
-    robots: { index: p.fresh, follow: true },
+    title: `${deal.title} | ${deal.store_name} | ${t(locale, 'brand')}`,
+    description,
+    alternates: { canonical: `https://eg.ahsanli.com/${locale}/products/${deal.id}`, languages: { 'ar-EG': `https://eg.ahsanli.com/ar/products/${deal.id}`, en: `https://eg.ahsanli.com/en/products/${deal.id}` } },
+    openGraph: { title: deal.title, description, url: `https://eg.ahsanli.com/${locale}/products/${deal.id}`, siteName: t(locale, 'brand'), locale: locale === 'ar' ? 'ar_EG' : 'en_US', type: 'website' },
   };
 }
 
 export default async function ProductPage({ params }: { params: Promise<{ locale: Locale; id: string }> }) {
   const { locale, id } = await params;
-  const detail = await getProduct('EG', id);
-  if (!detail) notFound();
-  const p = detail.product;
-  const direct = detail.history.filter(x => !x.imported);
-  const prices = direct.map(x => Number(x.price));
-  const min = prices.length ? Math.min(...prices) : null;
-  const max = prices.length ? Math.max(...prices) : null;
-  const statusClass = p.fresh ? "status fresh" : p.imported ? "status imported" : "status stale";
-  const statusText = p.fresh ? t(locale, 'verifiedPrice') : p.imported ? t(locale, 'importedPrice') : t(locale, 'stalePrice');
+  const deal = await getDeal('EG', id);
+  if (!deal) notFound();
+  const note = locale === 'ar' ? deal.editorial_note_ar : deal.editorial_note_en;
 
   return <main className="detail-main">
-    <div className="breadcrumbs">
-      <Link href={`/${locale}/`}>{t(locale, 'navProducts')}</Link>
-      <span>/</span>
-      <span>{p.store_name}</span>
-      <span>/</span>
-      <span>{p.product_id}</span>
-    </div>
+    <div className="breadcrumbs"><Link href={`/${locale}/deals`}>{t(locale, 'navDeals')}</Link><span>/</span><span>{deal.store_name}</span><span>/</span><span>{deal.product_id}</span></div>
     <section className="detail-hero">
       <div className="detail-media">
-        {p.image_url ? <img src={`/api/proxy-image?url=${encodeURIComponent(p.image_url)}`} alt={p.title} /> : <div className="detail-placeholder">{p.store === "amazon_eg" ? "A" : p.store === "noon_eg" ? "N" : "J"}</div>}
+        {deal.image_url ? <img src={`/api/proxy-image?url=${encodeURIComponent(deal.image_url)}`} alt={deal.title} /> : <div className="detail-placeholder">{deal.store_name.charAt(0)}</div>}
+        <span className="detail-verified"><span aria-hidden="true">✓</span>{t(locale, 'verifiedDeal')}</span>
       </div>
       <div className="detail-copy">
-        <div className="detail-tags">
-          <span>{p.store_name}</span>
-          <span className={statusClass}>{statusText}</span>
-        </div>
-        <h1>{p.title}</h1>
-        <div className="detail-price-label">{statusText}</div>
-        <div className="detail-price">{money(p.price, p.currency, locale)}</div>
-        {p.drop_percent && p.fresh && <div className="detail-drop">↓ {t(locale, 'dropLabel')} {Number(p.drop_percent).toFixed(1)}%</div>}
+        <div className="detail-tags"><span>{deal.store_name}</span><span className="status fresh">{t(locale, 'verifiedPrice')}</span></div>
+        <h1>{deal.title}</h1>
+        <div className="detail-price-label">{t(locale, 'verifiedPrice')}</div>
+        <div className="detail-price">{money(deal.price, deal.currency, locale)}</div>
+        {deal.displayed_discount && <div className="merchant-discount"><span>{t(locale, 'storeDiscount')}</span><strong>{Number(deal.displayed_discount).toFixed(0)}%</strong><small>{locale === 'ar' ? 'كما ظهر في صفحة المتجر وقت التحقق' : 'As displayed on the store page at verification time'}</small></div>}
+        {deal.drop_percent && <div className="historical-fact"><span>{t(locale, 'verifiedDrop')}</span><strong>{Number(deal.drop_percent).toFixed(1)}%</strong><small>{locale === 'ar' ? 'مقارنة بآخر قراءة مباشرة سابقة لدى أحسنلي؛ ليس خصمًا معلنًا من المتجر' : 'Compared with AHSANLY’s previous direct reading; not a store-displayed discount'}</small></div>}
+        {note && <div className="editorial-note"><span>{t(locale, 'editorialNote')}</span><p>{note}</p></div>}
         <div className="detail-facts">
-          <div><span>{locale === 'ar' ? 'البائع' : 'Seller'}</span><strong>{!p.imported && p.seller ? p.seller : t(locale, 'sellerUnknown')}</strong></div>
-          <div><span>{locale === 'ar' ? 'وقت القراءة' : 'Reading time'}</span><strong>{dateTime(p.observed_at, locale)}</strong></div>
-          <div><span>{locale === 'ar' ? 'المتجر' : 'Store'}</span><strong>{p.store_name}</strong></div>
+          <div><span>{locale === 'ar' ? 'البائع' : 'Seller'}</span><strong>{deal.seller || t(locale, 'sellerUnknown')}</strong></div>
+          <div><span>{t(locale, 'lastChecked')}</span><strong>{dateTime(deal.observed_at, locale)}</strong></div>
+          <div><span>{locale === 'ar' ? 'المتجر' : 'Store'}</span><strong>{deal.store_name}</strong></div>
         </div>
-        {p.affiliate_url.startsWith("https://") ?
-          <a className="button-primary buy-button" href={p.affiliate_url} target="_blank" rel="noopener noreferrer sponsored">{t(locale, 'openStore')} ↗</a> :
-          <div className="link-pending">{t(locale, 'linkPending')}</div>}
+        {deal.affiliate_url.startsWith("https://") ? <a className="button-primary buy-button" href={deal.affiliate_url} target="_blank" rel="noopener noreferrer sponsored">{t(locale, 'openStore')} ↗</a> : <div className="link-pending">{t(locale, 'linkPending')}</div>}
         <p className="detail-caution">{t(locale, 'storeCaution')}</p>
       </div>
     </section>
-    <section className="history-section">
-      <div className="section-heading">
-        <div>
-          <span className="section-kicker">{t(locale, 'historyKicker')}</span>
-          <h2>{t(locale, 'historyTitle')}</h2>
-          <p>{t(locale, 'historyIntro')}</p>
-        </div>
-        <span className="section-mark">/ 02</span>
-      </div>
-      <div className="history-board">
-        <div className="history-stats">
-          <div><span>{t(locale, 'minPrice')}</span><strong>{min === null ? "—" : money(String(min), p.currency, locale)}</strong></div>
-          <div><span>{t(locale, 'maxPrice')}</span><strong>{max === null ? "—" : money(String(max), p.currency, locale)}</strong></div>
-          <div><span>{t(locale, 'directReadings')}</span><strong>{direct.length.toLocaleString(locale === 'ar' ? 'ar-EG' : 'en-US')}</strong></div>
-        </div>
-        <PriceChart history={detail.history} locale={locale} />
-      </div>
-      <div className="readings">
-        <h3>{t(locale, 'latestReadings')}</h3>
-        <div className="reading-list">
-          {detail.history.slice(0, 12).map((point, i) => <div key={`${point.at}-${i}`}>
-            <span>{dateTime(point.at, locale)}</span>
-            <strong>{money(point.price, p.currency, locale)}</strong>
-            <small>{point.imported ? t(locale, 'importedLabel') : t(locale, 'directLabel')}</small>
-          </div>)}
-        </div>
-      </div>
+    <section className="deal-proof">
+      <div><span>01</span><strong>{t(locale, 'howObserveTitle')}</strong><p>{t(locale, 'howObserveBody')}</p></div>
+      <div><span>02</span><strong>{t(locale, 'howCompareTitle')}</strong><p>{t(locale, 'howCompareBody')}</p></div>
+      <div><span>03</span><strong>{t(locale, 'howDecideTitle')}</strong><p>{t(locale, 'howDecideBody')}</p></div>
     </section>
   </main>;
 }

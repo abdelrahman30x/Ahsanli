@@ -11,7 +11,7 @@ type Rule = { id: number; country: string; historical_percent: string; freshness
 type Channel = { id: number; name: string; country: string; platform: string; destination_id: string; enabled: boolean; private_test: boolean; active_routes: number };
 type Country = { id: number; code: string; name: string; currency: string; enabled: boolean };
 type Route = { id: number; country: string; channel: string; retailer: string; enabled: boolean; channel_enabled: boolean };
-type Candidate = { id: number; listing_id: number; store: string; title: string; price: string; percent: string; state: string; has_evidence: boolean };
+type Candidate = { id: number; listing_id: number; store: string; store_name: string; country: string; title: string; price: string; currency: string; seller: string; observed_at: string; percent: string; state: string; has_evidence: boolean; evidence_url: string; displayed_discount: string | null; featured: boolean; editorial_note_ar: string; editorial_note_en: string; eligible: boolean };
 type Match = { id: number; listing_id: number; title: string; store: string; canonical_id: number; brand: string; model: string; method: string; confidence: string; state: string };
 type Publication = { id: number; channel: string; status: string; attempt_count: number; message_id: string; last_error: string };
 type Page<T> = { items: T[]; has_more?: boolean; page?: number };
@@ -106,6 +106,7 @@ export default function Console() {
         setListings(await read<Page<Listing>>(`listings?${search}`));
       }
       if (tab === "matches") setMatches(await read<Page<Match>>(`matches?page=${page}`));
+      if (tab === "candidates") setCandidates(await read<Page<Candidate>>(`candidates?page=${page}`));
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "تعذّر حفظ التغيير.");
     }
@@ -185,9 +186,43 @@ export default function Console() {
     {tab === "rules" && <div className="console-cards">{rules.map(rule => <form key={rule.id} onSubmit={e => { e.preventDefault(); const data = new FormData(e.currentTarget); void patch(`rules/${rule.id}`, { historical_percent: String(data.get("percent")) }); }}><strong>قاعدة {rule.country}</strong><p>النسبة الحالية: {rule.historical_percent}% · الإصدار {rule.version}</p><label>أقل انخفاض يستحق النشر<input name="percent" type="number" min="1" max="90" step="0.01" defaultValue={rule.historical_percent} /></label><button className="button-primary">حفظ النسبة</button></form>)}</div>}
     {tab === "channels" && <><div className="console-table-wrap"><table><thead><tr><th>القناة</th><th>الدولة</th><th>المنصة</th><th>النوع</th><th>الحالة</th><th>المسارات</th></tr></thead><tbody>{channels.map(channel => <tr key={channel.id}><td>{channel.name}</td><td>{channel.country}</td><td>{channel.platform}</td><td>{channel.private_test ? "اختبار خاصة" : "عامة"}</td><td>{channel.enabled ? "مفعّلة" : "متوقفة"}</td><td>{channel.active_routes}</td></tr>)}</tbody></table></div><h2>مسارات النشر</h2><form className="console-search" onSubmit={event => void createRoute(event)}><label>القناة<select name="channel" required defaultValue=""><option value="" disabled>اختر قناة</option>{channels.map(channel => <option key={channel.id} value={channel.id}>{channel.name} ({channel.country})</option>)}</select></label><label>المصدر<select name="retailer" defaultValue=""><option value="">كل المتاجر في الدولة</option>{retailers.map(store => <option key={store.id} value={store.id}>{store.name} ({store.country})</option>)}</select></label><button className="console-quiet" type="submit">إضافة مسار متوقف</button></form><div className="console-table-wrap"><table><thead><tr><th>الدولة</th><th>القناة</th><th>المصدر</th><th>الحالة</th><th>الإجراء</th></tr></thead><tbody>{routes.map(route => <tr key={route.id}><td>{route.country}</td><td>{route.channel}</td><td>{route.retailer || "كل المتاجر"}</td><td>{route.enabled ? "مفعّل" : "متوقف"}</td><td><button className="console-quiet" disabled={!route.channel_enabled && !route.enabled} onClick={() => void patch(`routes/${route.id}`, { enabled: !route.enabled })}>{route.enabled ? "إيقاف المسار" : "تفعيل المسار"}</button></td></tr>)}</tbody></table></div></>}
     {tab === "matches" && <><div className="console-table-wrap"><table><thead><tr><th>المنتج</th><th>النسخة المرجعية المقترحة</th><th>سبب الاقتراح</th><th>القرار</th></tr></thead><tbody>{matches.items.map(item => <tr key={item.id}><td>{item.title}<small>{item.store}</small></td><td>{item.brand} {item.model}</td><td>{item.method} · {item.confidence}</td><td><button className="console-quiet" onClick={() => void patch(`matches/${item.id}`, { decision: "approved" })}>اعتماد</button> <button className="console-quiet" onClick={() => void patch(`matches/${item.id}`, { decision: "rejected" })}>رفض</button></td></tr>)}</tbody></table></div><Pager page={page} hasMore={!!matches.has_more} setPage={setPage} /></>}
-    {tab === "candidates" && <><div className="console-table-wrap"><table><thead><tr><th>المنتج</th><th>السعر</th><th>الانخفاض</th><th>الحالة</th><th>الصورة</th></tr></thead><tbody>{candidates.items.map(item => <tr key={item.id}><td>{item.title}</td><td>{item.price}</td><td>{item.percent}%</td><td>{item.state}</td><td>{item.has_evidence ? "موجودة" : "—"}</td></tr>)}</tbody></table></div><Pager page={page} hasMore={!!candidates.has_more} setPage={setPage} /></>}
+    {tab === "candidates" && <><div className="review-grid">{candidates.items.map(item => <CandidateReview key={item.id} item={item} onReview={patch} />)}</div>{candidates.items.length === 0 && <div className="empty-state"><strong>لا توجد عروض في قائمة المراجعة</strong><p>المرشح الجديد يظهر هنا بعد اكتمال صورة الدليل، ولا يتنشر قبل اعتمادك.</p></div>}<Pager page={page} hasMore={!!candidates.has_more} setPage={setPage} /></>}
     {tab === "publications" && <><div className="console-table-wrap"><table><thead><tr><th>القناة</th><th>الحالة</th><th>المحاولات</th><th>رقم الرسالة</th><th>الخطأ</th></tr></thead><tbody>{publications.items.map(item => <tr key={item.id}><td>{item.channel}</td><td>{item.status}</td><td>{item.attempt_count}</td><td>{item.message_id || "—"}</td><td>{item.last_error || "—"}</td></tr>)}</tbody></table></div><Pager page={page} hasMore={!!publications.has_more} setPage={setPage} /></>}
   </main>;
+}
+
+function CandidateReview({ item, onReview }: { item: Candidate; onReview: (path: string, body: object) => Promise<void> }) {
+  const awaiting = item.state === "review";
+  const editable = item.state === "approved" || item.state === "queued";
+  const submit = (event: FormEvent<HTMLFormElement>, decision: string) => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    void onReview(`candidates/${item.id}`, {
+      decision,
+      featured: data.get("featured") === "on",
+      editorial_note_ar: String(data.get("note_ar") || ""),
+      editorial_note_en: String(data.get("note_en") || ""),
+    });
+  };
+  const stateLabel: Record<string, string> = { review: "بانتظار المراجعة", approved: "معتمد", queued: "في مسار النشر", rejected: "مرفوض", held: "متوقف" };
+  return <form className="review-card" onSubmit={event => submit(event, awaiting ? "approved" : "")}>
+    <a className="review-evidence" href={item.has_evidence ? item.evidence_url : undefined} target="_blank" rel="noreferrer" aria-label={`صورة دليل ${item.title}`}>
+      {item.has_evidence ? <img src={item.evidence_url} alt="لقطة صفحة المتجر مع السعر والبائع" /> : <span>لا توجد صورة دليل</span>}
+    </a>
+    <div className="review-main">
+      <span className="review-state">{stateLabel[item.state] || item.state} · #{item.id}</span>
+      <h3>{item.title}</h3>
+      <div className="review-facts"><span>{item.store_name} · {item.country}</span><strong>{item.price} {item.currency}</strong><span>البائع: {item.seller}</span><span>آخر فحص: {new Date(item.observed_at).toLocaleString("ar-EG")}</span><span>انخفاضنا التاريخي: {item.percent}%</span>{item.displayed_discount && <strong>خصم المتجر المعروض: {item.displayed_discount}%</strong>}</div>
+      {!item.eligible && <p className="console-error">القراءة لم تعد حديثة أو صالحة؛ لا يمكن اعتماد العرض الآن.</p>}
+      <div className="review-note-fields"><label>سبب الاختيار بالعربية<textarea name="note_ar" rows={3} maxLength={600} defaultValue={item.editorial_note_ar} placeholder="اختياري: سبب واضح ومختصر" /></label><label>Editorial note in English<textarea name="note_en" rows={3} maxLength={600} defaultValue={item.editorial_note_en} placeholder="Optional concise reason" /></label></div>
+      <div className="review-actions">
+        <label><input name="featured" type="checkbox" defaultChecked={item.featured} /> عرض مميز</label>
+        {awaiting && <><button className="button-primary" type="submit" disabled={!item.eligible}>اعتماد للموقع وتليجرام</button><button className="console-quiet reject" type="button" onClick={event => { event.preventDefault(); if (event.currentTarget.form) { const synthetic = { preventDefault() {}, currentTarget: event.currentTarget.form } as FormEvent<HTMLFormElement>; submit(synthetic, "rejected"); } }}>رفض العرض</button></>}
+        {editable && <button className="console-quiet" type="submit">حفظ التحرير والتمييز</button>}
+        {!awaiting && !editable && <span>لا توجد إجراءات متاحة لهذه الحالة.</span>}
+      </div>
+    </div>
+  </form>;
 }
 
 function Pager({ page, hasMore, setPage }: { page: number; hasMore: boolean; setPage: (value: number) => void }) {

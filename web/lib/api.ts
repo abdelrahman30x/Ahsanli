@@ -7,8 +7,17 @@ export type Product = {
   imported: boolean; fresh: boolean; drop_percent: string | null; image_url: string | null;
   url: string; affiliate_url: string;
 };
+export type Deal = Product & {
+  deal_id: number;
+  displayed_discount: string | null;
+  featured: boolean;
+  editorial_note_ar: string;
+  editorial_note_en: string;
+  selected_at: string;
+};
 export type PricePoint = { price: string; at: string; imported: boolean; seller: string };
 export type ProductPage = { items: Product[]; page?: number; next_cursor?: string; has_more: boolean };
+export type DealPage = { items: Deal[]; next_cursor?: string; has_more: boolean };
 export type ProductDetail = { product: Product; history: PricePoint[] };
 export type CategoryMeta = { code: string; name_ar: string; name_en: string };
 export type RetailerMeta = { code: string; name: string; enabled: boolean; health: string };
@@ -40,6 +49,24 @@ export async function listProducts(locale: Locale, country: string, params: Reco
     const query = new URLSearchParams(params);
     const res = await fetch(`${api}/api/v1/countries/${country}/products?${query}`, { next: { revalidate: 20 } });
     return res.ok ? await res.json() : null;
+  } catch { return null; }
+}
+
+export async function listDeals(country: string, params: Record<string, string>): Promise<DealPage | null> {
+  try {
+    const query = new URLSearchParams(params);
+    const res = await fetch(`${api}/api/v1/countries/${country}/deals?${query}`, { next: { revalidate: 20 } });
+    return res.ok ? await res.json() : null;
+  } catch { return null; }
+}
+
+export async function getDeal(country: string, id: string): Promise<Deal | null> {
+  if (!/^\d+$/.test(id)) return null;
+  try {
+    const res = await fetch(`${api}/api/v1/countries/${country}/deals/${id}`, { next: { revalidate: 20 } });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.deal || null;
   } catch { return null; }
 }
 

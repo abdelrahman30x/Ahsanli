@@ -77,7 +77,7 @@ func (o *Outbox) PrepareOne(ctx context.Context) (bool, error) {
  JOIN core_listing l ON l.id=obs.listing_id JOIN core_retailer r ON r.id=l.retailer_id
  JOIN core_country c ON c.id=r.country_id JOIN core_dealrule rule ON rule.country_id=c.id
  JOIN core_currentoffer co ON co.listing_id=l.id AND co.observation_id=obs.id
- WHERE d.state='captured' AND d.reason='historical' AND d.historical_baseline IS NOT NULL
+ WHERE d.state='approved' AND d.reason='historical' AND d.historical_baseline IS NOT NULL
  AND d.historical_baseline>obs.price AND (d.historical_baseline-obs.price)*100>=d.historical_baseline*rule.historical_percent
  AND obs.imported=false AND obs.stock_status='in_stock' AND obs.observed_at>=now()-(rule.freshness_hours*interval '1 hour')
  AND d.evidence_path<>'' AND d.evidence_price=obs.price AND d.evidence_seller=obs.seller

@@ -40,6 +40,7 @@ func (a API) Routes() http.Handler {
 	mux.HandleFunc("GET /api/v1/countries/{code}/products", a.countryProducts)
 	mux.HandleFunc("GET /api/v1/countries/{code}/products/{id}", a.countryProduct)
 	mux.HandleFunc("GET /api/v1/countries/{code}/deals", a.countryDeals)
+	mux.HandleFunc("GET /api/v1/countries/{code}/deals/{id}", a.countryDeal)
 	mux.HandleFunc("GET /api/v1/choose-country", a.chooseCountry)
 	// Apex geo entry point.
 	mux.HandleFunc("GET /", a.apexRoot)
@@ -194,32 +195,48 @@ func (a API) countryProduct(w http.ResponseWriter, r *http.Request) {
 func (a API) countryDeals(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	limit, _ := strconv.Atoi(q.Get("limit"))
-	if limit < 1 || limit > 48 {
-		limit = 24
-	}
-	f := catalog.Filter{
-		Country: r.PathValue("code"),
-		Sort:    "drop",
-		Cursor:  q.Get("cursor"),
-		Limit:   limit,
-	}
-	if !countryCode.MatchString(f.Country) {
-		write(w, 400, map[string]string{"error": "invalid country"})
-		return
+	f := catalog.DealFilter{
+		Country:      r.PathValue("code"),
+		Store:        q.Get("store"),
+		Category:     q.Get("category"),
+		Cursor:       q.Get("cursor"),
+		Limit:        limit,
+		FeaturedOnly: q.Get("featured") == "1",
 	}
 	ctx, cancel := contextWithTimeout(r, 10*time.Second)
 	defer cancel()
-	result, err := a.Catalog.List(ctx, f)
+	result, err := a.Catalog.ListDeals(ctx, f)
 	if err != nil {
-		if err.Error() == "invalid cursor" || strings.HasPrefix(err.Error(), "cursor ") || strings.HasPrefix(err.Error(), "invalid ") {
+		if strings.HasPrefix(err.Error(), "invalid ") || strings.HasPrefix(err.Error(), "cursor ") {
 			write(w, 400, map[string]string{"error": err.Error()})
 			return
 		}
-		write(w, 503, map[string]string{"error": "catalog temporarily unavailable"})
+		write(w, 503, map[string]string{"error": "deals temporarily unavailable"})
 		return
 	}
 	w.Header().Set("Cache-Control", "public, max-age=20")
 	write(w, 200, result)
+}
+
+func (a API) countryDeal(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	if err != nil || id < 1 {
+		write(w, 400, map[string]string{"error": "invalid deal id"})
+		return
+	}
+	ctx, cancel := contextWithTimeout(r, 10*time.Second)
+	defer cancel()
+	deal, err := a.Catalog.GetDeal(ctx, id, r.PathValue("code"))
+	if errors.Is(err, pgx.ErrNoRows) {
+		write(w, 404, map[string]string{"error": "deal not found"})
+		return
+	}
+	if err != nil {
+		write(w, 503, map[string]string{"error": "deal temporarily unavailable"})
+		return
+	}
+	w.Header().Set("Cache-Control", "public, max-age=20")
+	write(w, 200, map[string]any{"deal": deal})
 }
 
 func (a API) countryMeta(w http.ResponseWriter, r *http.Request) {

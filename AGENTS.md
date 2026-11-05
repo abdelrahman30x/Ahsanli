@@ -44,6 +44,10 @@ systemctl enable --now ahsanly-deploy.timer
 
 Keep only one worker and one pipeline active. Deployment never enables the legacy BotAfflite units or changes the Amazon request cap.
 
+## Curated public deals
+
+The public site is a selected-deals storefront, not a general price-comparison catalog. A candidate enters `review` after a matching screenshot; staff must explicitly approve it in `/console` before it can appear publicly or enter the Telegram outbox. Rejected, unreviewed, imported, stale, wrong-country, or evidence-mismatched candidates never appear as current deals. Merchant-displayed discount and AHSANLY historical drop are separate facts. Existing sent Telegram history and publication keys remain unchanged.
+
 ## Operational limits (unchanged)
 
 - Amazon source cap remains **120 requests/hour** with six-hour blocked-source backoff.

@@ -57,8 +57,8 @@ func TestPostgresPrivateRouteAndUncertainDelivery(t *testing.T) {
 		t.Fatal(err)
 	}
 	var countryID, retailerID, listingID, observationID, candidateID, privateID, liveID int64
-	if err = pool.QueryRow(ctx, `INSERT INTO core_country(code,name_en,name_ar,currency,currency_label_ar,locale,enabled)
-VALUES('ZX','Integration','اختبار','EGP','جنيه','ar',true) RETURNING id`).Scan(&countryID); err != nil {
+	if err = pool.QueryRow(ctx, `INSERT INTO core_country(code,name_en,name_ar,currency,currency_label_ar,locale,enabled,enabled_public_site)
+VALUES('ZX','Integration','اختبار','EGP','جنيه','ar',true,true) RETURNING id`).Scan(&countryID); err != nil {
 		t.Fatalf("country fixture: %v", err)
 	}
 	if err = pool.QueryRow(ctx, `INSERT INTO core_retailer(code,country_id,domain,display_name_ar,currency,enabled,publish_enabled,
@@ -88,7 +88,7 @@ VALUES($1,89,'EGP','Amazon.eg','in_stock','go_http',now(),false,'') RETURNING id
 	}
 	if err = pool.QueryRow(ctx, `INSERT INTO core_dealcandidate(winning_observation_id,compared_observations,historical_baseline,
 rule_version,reason,percent,state,evidence_path,evidence_price,evidence_seller,capture_retries,created_at)
-VALUES($1,'[]'::jsonb,100,1,'historical',11,'captured',$2,89,'Amazon.eg',0,now()) RETURNING id`, observationID, photoPath).Scan(&candidateID); err != nil {
+VALUES($1,'[]'::jsonb,100,1,'historical',11,'review',$2,89,'Amazon.eg',0,now()) RETURNING id`, observationID, photoPath).Scan(&candidateID); err != nil {
 		t.Fatalf("candidate fixture: %v", err)
 	}
 	for _, channel := range []struct {
@@ -120,6 +120,41 @@ VALUES($1,$2,'https://www.amazon.eg/dp/B0TEST1234?tag=integration',now())`, list
 	if _, err = pool.Exec(ctx, `UPDATE core_listing SET extracted_attributes='{"go_owned":true}'::jsonb WHERE id=$1`, listingID); err != nil {
 		t.Fatalf("mark Go ownership: %v", err)
 	}
+	if worked, err := box.PrepareOne(ctx); err != nil || worked {
+		t.Fatalf("unreviewed candidate prepared for publication: worked=%v err=%v", worked, err)
+	}
+	publicCatalog := &catalog.Store{DB: pool}
+	hidden, err := publicCatalog.ListDeals(ctx, catalog.DealFilter{Country: "ZX"})
+	if err != nil || len(hidden.Items) != 0 {
+		t.Fatalf("unreviewed candidate appeared publicly: %+v, %v", hidden, err)
+	}
+	if _, err = pool.Exec(ctx, `UPDATE core_dealcandidate SET state='approved',reviewed_at=now(),evidence_discount=20 WHERE id=$1`, candidateID); err != nil {
+		t.Fatal(err)
+	}
+	visible, err := publicCatalog.ListDeals(ctx, catalog.DealFilter{Country: "ZX"})
+	if err != nil || len(visible.Items) != 1 || visible.Items[0].DisplayedDiscount == nil || *visible.Items[0].DisplayedDiscount != "20.00" {
+		t.Fatalf("approved deal or store discount missing: %+v, %v", visible, err)
+	}
+	wrongCountry, err := publicCatalog.ListDeals(ctx, catalog.DealFilter{Country: "EG"})
+	if err != nil || len(wrongCountry.Items) != 0 {
+		t.Fatalf("deal leaked to another country: %+v, %v", wrongCountry, err)
+	}
+	if detail, detailErr := publicCatalog.GetDeal(ctx, listingID, "ZX"); detailErr != nil || detail.DealID != candidateID {
+		t.Fatalf("approved deal detail unavailable: %+v, %v", detail, detailErr)
+	}
+	if _, detailErr := publicCatalog.GetDeal(ctx, listingID, "EG"); detailErr == nil {
+		t.Fatal("deal detail leaked to another country")
+	}
+	if _, err = pool.Exec(ctx, `UPDATE core_offerobservation SET observed_at=now()-interval '3 hours' WHERE id=$1`, observationID); err != nil {
+		t.Fatal(err)
+	}
+	stale, err := publicCatalog.ListDeals(ctx, catalog.DealFilter{Country: "ZX"})
+	if err != nil || len(stale.Items) != 0 {
+		t.Fatalf("stale approved deal remained public: %+v, %v", stale, err)
+	}
+	if _, err = pool.Exec(ctx, `UPDATE core_offerobservation SET observed_at=now() WHERE id=$1`, observationID); err != nil {
+		t.Fatal(err)
+	}
 	worked, err := box.PrepareOne(ctx)
 	if err != nil || !worked {
 		t.Fatalf("prepare private photo: worked=%v err=%v", worked, err)
@@ -133,7 +168,7 @@ FROM core_publication`, privateID, liveID).Scan(&publications, &privatePublicati
 		t.Fatalf("private routing leaked to live channel: total=%d private=%d live=%d", publications, privatePublications, livePublications)
 	}
 	// Repeated preparation cannot duplicate a channel/observation publication.
-	_, err = pool.Exec(ctx, `UPDATE core_dealcandidate SET state='captured' WHERE id=$1`, candidateID)
+	_, err = pool.Exec(ctx, `UPDATE core_dealcandidate SET state='approved' WHERE id=$1`, candidateID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -164,7 +199,7 @@ FROM core_publication`, privateID, liveID).Scan(&publications, &privatePublicati
 		t.Fatalf("uncertain publication status: %q, %v", status, err)
 	}
 	box.AllowLiveChannels = true
-	_, err = pool.Exec(ctx, `UPDATE core_dealcandidate SET state='captured' WHERE id=$1`, candidateID)
+	_, err = pool.Exec(ctx, `UPDATE core_dealcandidate SET state='approved' WHERE id=$1`, candidateID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -174,5 +209,30 @@ FROM core_publication`, privateID, liveID).Scan(&publications, &privatePublicati
 	}
 	if err = pool.QueryRow(ctx, `SELECT count(*) FROM core_publication WHERE channel_id=$1`, liveID).Scan(&livePublications); err != nil || livePublications != 1 {
 		t.Fatalf("explicit live route not prepared: %d, %v", livePublications, err)
+	}
+
+	var secondListing, secondObservation int64
+	if err = pool.QueryRow(ctx, `INSERT INTO core_listing(retailer_id,retailer_product_id,original_url,title,extracted_attributes,tracking_state,cadence,created_at)
+ VALUES($1,'B0TEST5678','https://www.amazon.eg/dp/B0TEST5678','Second integration deal','{"go_owned":true}'::jsonb,'watch','hot',now()) RETURNING id`, retailerID).Scan(&secondListing); err != nil {
+		t.Fatal(err)
+	}
+	if err = pool.QueryRow(ctx, `INSERT INTO core_offerobservation(listing_id,price,currency,seller,stock_status,source,observed_at,imported,legacy_source)
+ VALUES($1,75,'EGP','Amazon.eg','in_stock','go_http',now(),false,'') RETURNING id`, secondListing).Scan(&secondObservation); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = pool.Exec(ctx, `INSERT INTO core_currentoffer(listing_id,observation_id,updated_at) VALUES($1,$2,now())`, secondListing, secondObservation); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = pool.Exec(ctx, `INSERT INTO core_dealcandidate(winning_observation_id,compared_observations,historical_baseline,rule_version,reason,percent,state,evidence_path,evidence_price,evidence_seller,evidence_discount,capture_retries,created_at,reviewed_at,featured)
+ VALUES($1,'[]'::jsonb,100,1,'historical',25,'approved',$2,75,'Amazon.eg',25,0,now(),now(),true)`, secondObservation, photoPath); err != nil {
+		t.Fatal(err)
+	}
+	firstPage, err := publicCatalog.ListDeals(ctx, catalog.DealFilter{Country: "ZX", Limit: 1})
+	if err != nil || len(firstPage.Items) != 1 || !firstPage.HasMore || firstPage.NextCursor == "" || !firstPage.Items[0].Featured {
+		t.Fatalf("first curated page: %+v, %v", firstPage, err)
+	}
+	secondPage, err := publicCatalog.ListDeals(ctx, catalog.DealFilter{Country: "ZX", Limit: 1, Cursor: firstPage.NextCursor})
+	if err != nil || len(secondPage.Items) != 1 || secondPage.Items[0].ID == firstPage.Items[0].ID || secondPage.HasMore {
+		t.Fatalf("cursor duplicated or omitted a deal: first=%+v second=%+v err=%v", firstPage, secondPage, err)
 	}
 }

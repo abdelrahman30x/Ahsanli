@@ -51,7 +51,7 @@ The existing Egypt channel was kept with its old bot token (user decision). The 
 
 - Amazon cap: **120 requests/hour**.
 - Blocked-source backoff: six hours, then one retry probe.
-- Photo-only deal requirement: fresh direct observation + matching screenshot.
+- Photo-only deal requirement: fresh direct observation + matching screenshot + explicit staff editorial approval. Capture enters `review`; unreviewed or rejected candidates cannot publish.
 - No Windows project scripts are running.
 - Egypt is the only enabled country.
 
