@@ -4,12 +4,21 @@
 
 AHSANLY (Arabic: **أحسنلي**) is a multi-country, bilingual, curated-deals platform. Its tagline is **“أحسن عرض.. أحسن سعر”**. The public product is a small selection of worthwhile, verified store offers—not a large catalog, a general search engine, or a shopper-facing price-comparison tool.
 
-Egypt is the first launched country. Its public storefronts are:
+Egypt is the primary operating storefront with live observations and curated deals. The platform supports nine Middle East countries with active subdomains and localized `/ar/` (right-to-left) and `/en/` (left-to-right) routes:
 
-- `https://eg.ahsanli.com/ar/` — Arabic, right-to-left.
-- `https://eg.ahsanli.com/en/` — English, left-to-right.
+- Egypt: `https://eg.ahsanli.com/` (`EGP`)
+- Saudi Arabia: `https://sa.ahsanli.com/` (`SAR`)
+- Jordan: `https://jo.ahsanli.com/` (`JOD`)
+- United Arab Emirates: `https://ae.ahsanli.com/` (`AED`)
+- Kuwait: `https://kw.ahsanli.com/` (`KWD`)
+- Oman: `https://om.ahsanli.com/` (`OMR`)
+- Bahrain: `https://bh.ahsanli.com/` (`BHD`)
+- Qatar: `https://qa.ahsanli.com/` (`QAR`)
+- Iraq: `https://iq.ahsanli.com/` (`IQD`)
+
+In addition:
 - `https://ahsanli.com/` — apex entry that uses a saved country preference or local IP geolocation.
-- `https://ahsanli.com/countries` — permanent country selector.
+- `https://ahsanli.com/countries` — permanent country selector with flags and currency metadata.
 - `https://ahsanli.com/console` — the only staff origin.
 
 The purchased domain is spelled `ahsanli.com`; the brand spelling remains **AHSANLY** even though the hostname uses `ahsanli`.

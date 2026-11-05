@@ -11,7 +11,7 @@ AHSANLY uses one Next.js instance, one Go API, one PostgreSQL database, and coun
 | Offer worker | Go worker with PostgreSQL jobs/leases | `ahsanly-worker.service` |
 | Evidence and Telegram pipeline | Go worker capture + publishing outbox | `ahsanly-pipeline.service` |
 | Data | PostgreSQL database `ahsanly` | Loopback only; application role `ahsanly_app` |
-| Public routing/TLS | Nginx + Let's Encrypt | `ahsanli.com`, `eg.ahsanli.com`, `www.ahsanli.com`, legacy IP redirects |
+| Public routing/TLS | Nginx + Let's Encrypt | `ahsanli.com`, `www.ahsanli.com`, 9 country subdomains (`eg`, `sa`, `ae`, `kw`, `jo`, `om`, `bh`, `qa`, `iq`), legacy IP redirects |
 | Country lookup | Local DB-IP Lite MMDB | `/etc/ahsanly/dbip-country-lite.mmdb` |
 | Evidence | PNG files | `/var/lib/ahsanly/captures` |
 | Backups | PostgreSQL custom-format dumps | `/var/backups/ahsanly/pg` |
@@ -46,8 +46,9 @@ Next does not connect directly to PostgreSQL and does not need Telegram credenti
 - `web/app/[locale]` — localized public home, deals, deal detail, and about pages.
 - `web/app/(global)/console` — staff UI at `/console`.
 - `web/app/(global)/countries` — country selector.
-- `web/components` — language switcher, mobile drawer, curated deal card.
+- `web/components` — country switcher dropdown, country vector flags, language switcher, mobile drawer, curated deal card.
 - `web/lib/api.ts` — server-side Go client and shared display types/formatters.
+- `web/lib/country.ts` and `countries-config.ts` — country subdomain detection and Middle East country catalog.
 - `web/lib/i18n.ts` — Arabic/English interface dictionary.
 - `ops` — current server scripts/units plus retained historical files.
 - `.github/workflows/build-release.yml` — tests and release publication.

@@ -1,6 +1,6 @@
 # AHSANLY workspace guide
 
-**Cutover completed:** 2026-11-05. AHSANLY | أحسنلي is the live public brand at `ahsanli.com`. Egypt is the first country at `eg.ahsanli.com/ar/` and `/en/`.
+**Cutover completed:** 2026-11-05. AHSANLY | أحسنلي is the live public brand at `ahsanli.com`, serving Egypt and eight additional Middle East country subdomains (`eg`, `sa`, `ae`, `kw`, `jo`, `om`, `bh`, `qa`, `iq.ahsanli.com`).
 
 ## Comprehensive documentation and AI handoff
 
@@ -22,7 +22,7 @@ The canonical English project reference is the numbered section library in `docs
 | Backups | `/var/backups/ahsanly/pg` | — |
 | DB-IP Lite | `/etc/ahsanly/dbip-country-lite.mmdb` | Updated monthly via `ahsanly-geoip-update.timer` |
 
-DNS: `ahsanli.com`, `eg.ahsanli.com`, and `www.ahsanli.com` A records point to `134.122.89.95`. HTTPS certificate from Let's Encrypt covers all three domains.
+DNS: `ahsanli.com`, `www.ahsanli.com`, and nine country subdomains (`eg`, `sa`, `ae`, `kw`, `jo`, `om`, `bh`, `qa`, `iq`) point to `134.122.89.95`. HTTPS certificate from Let's Encrypt covers all 11 domains.
 
 Nginx serves the new site from `/etc/nginx/sites-available/ahsanly`. Old `134.122.89.95` IP-based requests redirect to `https://eg.ahsanli.com/ar/...`; old staff paths redirect to `https://ahsanli.com/console`. The previous BotAfflite site config is saved in `/etc/nginx/sites-available/botafflite` but not enabled.
 

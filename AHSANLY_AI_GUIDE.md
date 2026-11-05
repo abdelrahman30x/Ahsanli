@@ -31,12 +31,21 @@ It contains no credentials, customer data, database dumps, or evidence images. D
 
 AHSANLY (Arabic: **أحسنلي**) is a multi-country, bilingual, curated-deals platform. Its tagline is **“أحسن عرض.. أحسن سعر”**. The public product is a small selection of worthwhile, verified store offers—not a large catalog, a general search engine, or a shopper-facing price-comparison tool.
 
-Egypt is the first launched country. Its public storefronts are:
+Egypt is the primary operating storefront with live observations and curated deals. The platform supports nine Middle East countries with active subdomains and localized `/ar/` (right-to-left) and `/en/` (left-to-right) routes:
 
-- `https://eg.ahsanli.com/ar/` — Arabic, right-to-left.
-- `https://eg.ahsanli.com/en/` — English, left-to-right.
+- Egypt: `https://eg.ahsanli.com/` (`EGP`)
+- Saudi Arabia: `https://sa.ahsanli.com/` (`SAR`)
+- Jordan: `https://jo.ahsanli.com/` (`JOD`)
+- United Arab Emirates: `https://ae.ahsanli.com/` (`AED`)
+- Kuwait: `https://kw.ahsanli.com/` (`KWD`)
+- Oman: `https://om.ahsanli.com/` (`OMR`)
+- Bahrain: `https://bh.ahsanli.com/` (`BHD`)
+- Qatar: `https://qa.ahsanli.com/` (`QAR`)
+- Iraq: `https://iq.ahsanli.com/` (`IQD`)
+
+In addition:
 - `https://ahsanli.com/` — apex entry that uses a saved country preference or local IP geolocation.
-- `https://ahsanli.com/countries` — permanent country selector.
+- `https://ahsanli.com/countries` — permanent country selector with flags and currency metadata.
 - `https://ahsanli.com/console` — the only staff origin.
 
 The purchased domain is spelled `ahsanli.com`; the brand spelling remains **AHSANLY** even though the hostname uses `ahsanli`.
@@ -116,7 +125,7 @@ AHSANLY uses one Next.js instance, one Go API, one PostgreSQL database, and coun
 | Offer worker | Go worker with PostgreSQL jobs/leases | `ahsanly-worker.service` |
 | Evidence and Telegram pipeline | Go worker capture + publishing outbox | `ahsanly-pipeline.service` |
 | Data | PostgreSQL database `ahsanly` | Loopback only; application role `ahsanly_app` |
-| Public routing/TLS | Nginx + Let's Encrypt | `ahsanli.com`, `eg.ahsanli.com`, `www.ahsanli.com`, legacy IP redirects |
+| Public routing/TLS | Nginx + Let's Encrypt | `ahsanli.com`, `www.ahsanli.com`, 9 country subdomains (`eg`, `sa`, `ae`, `kw`, `jo`, `om`, `bh`, `qa`, `iq`), legacy IP redirects |
 | Country lookup | Local DB-IP Lite MMDB | `/etc/ahsanly/dbip-country-lite.mmdb` |
 | Evidence | PNG files | `/var/lib/ahsanly/captures` |
 | Backups | PostgreSQL custom-format dumps | `/var/backups/ahsanly/pg` |
@@ -151,8 +160,9 @@ Next does not connect directly to PostgreSQL and does not need Telegram credenti
 - `web/app/[locale]` — localized public home, deals, deal detail, and about pages.
 - `web/app/(global)/console` — staff UI at `/console`.
 - `web/app/(global)/countries` — country selector.
-- `web/components` — language switcher, mobile drawer, curated deal card.
+- `web/components` — country switcher dropdown, country vector flags, language switcher, mobile drawer, curated deal card.
 - `web/lib/api.ts` — server-side Go client and shared display types/formatters.
+- `web/lib/country.ts` and `countries-config.ts` — country subdomain detection and Middle East country catalog.
 - `web/lib/i18n.ts` — Arabic/English interface dictionary.
 - `ops` — current server scripts/units plus retained historical files.
 - `.github/workflows/build-release.yml` — tests and release publication.
@@ -414,7 +424,7 @@ otp_totp_totpdevice ─ auth_user
 
 Key fields: `id`, unique two-letter `code`, `name_en`, `name_ar`, `currency`, `currency_label_ar`, `locale`, `enabled`, unique public `hostname`, IANA `timezone`, `default_locale`, and `enabled_public_site`.
 
-A country can exist operationally without being publicly launched. Both enabled/public gates and a valid hostname matter when adding a storefront.
+Nine Middle East countries are configured with public storefront hostnames and enabled public site gates: Egypt (`eg.ahsanli.com`), Saudi Arabia (`sa.ahsanli.com`), Jordan (`jo.ahsanli.com`), UAE (`ae.ahsanli.com`), Kuwait (`kw.ahsanli.com`), Oman (`om.ahsanli.com`), Bahrain (`bh.ahsanli.com`), Qatar (`qa.ahsanli.com`), and Iraq (`iq.ahsanli.com`). Each country has a dedicated unique deal rule in `core_dealrule`.
 
 ### `core_retailer`
 
@@ -517,7 +527,13 @@ The key `offer:<channelID>:<observationID>` prevents duplicate posts for the sam
 
 ## Migration discipline
 
-Migrations are embedded with `go:embed`, sorted by filename, and applied transactionally under a PostgreSQL advisory lock. `go_schema_migrations` records names. Use a new ordered file for every change; never edit an already deployed migration. Prefer additive, backward-compatible changes so code rollback against the same newer database remains safe.
+Migrations are embedded with `go:embed`, sorted by filename, and applied transactionally under a PostgreSQL advisory lock. `go_schema_migrations` records names. Use a new ordered file for every change; never edit an already deployed migration. Prefer additive, backward-compatible changes so code rollback against the same newer database remains safe. Active migrations include:
+- `0001_admin_session.sql`: Session table and indices.
+- `0002_country_hostname.sql`: Hostname, timezone, and locale fields on `core_country`.
+- `0003_channel_public_url.sql`: Public URL on publication channels.
+- `0004_category_taxonomy.sql`: Curated category taxonomy.
+- `0005_editorial_deal_review.sql`: Editorial candidate review fields and review queue indices.
+- `0006_additional_countries.sql`: Seed Middle East countries with dedicated subdomains and unique country deal rules.
 
 ---
 
@@ -998,13 +1014,12 @@ Edit `internal/publishing/caption.go`, preserving price, currency, seller, verif
 
 The following observations were recorded during the curated-storefront release on **2026-11-05**. They are not permanent health claims. Reconfirm before operating.
 
-- AHSANLY is live at `ahsanli.com`; Egypt serves `/ar` and `/en`.
-- Active source commit for the curated release: `cbbf57a74e980ea28ad6e4dac1145c5fef03e3b8`.
-- Go API, Next web, worker, and pipeline were active after automatic deployment.
-- Public Arabic, English, archive, and console routes returned HTTP 200.
-- No candidate was automatically approved to populate the new design.
-- The public approved-deals response was empty, so the honest empty state was intentional and verified.
-- An uncurated public product URL returned 404.
+- AHSANLY is live at `ahsanli.com`, serving Egypt and eight additional Middle East country subdomains (`eg.`, `sa.`, `ae.`, `kw.`, `jo.`, `om.`, `bh.`, `qa.`, `iq.ahsanli.com`).
+- Let's Encrypt TLS certificate covers all 11 apex, www, and country subdomains.
+- Go API, Next web, worker, and pipeline are active on the VPS.
+- Public Arabic, English, archive, and console routes return HTTP 200 across all subdomains.
+- No candidate was automatically approved to populate the new design; unpopulated countries display honest empty states.
+- An uncurated public product URL returns 404.
 - No production publication was manufactured for the release.
 
 ## Amazon source state and cap discrepancy
@@ -1038,7 +1053,7 @@ These are historical records, not instructions for the current stack. The active
 ## Technical limitations
 
 - The 1 GB VPS is not used for routine builds; artifacts come from GitHub.
-- Only Egypt is publicly launched; other countries require a full scoped launch.
+- Egypt has active retailer monitoring; other country subdomains are enabled with honest empty states awaiting dedicated retailer integrations.
 - Noon/Jumia remain paused/blocked or unsupported for fresh direct publication.
 - Category discovery exists but is not continuously scheduled.
 - Public price charts were removed from the sales flow, although observation history remains stored.

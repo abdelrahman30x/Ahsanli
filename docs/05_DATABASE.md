@@ -33,7 +33,7 @@ otp_totp_totpdevice ─ auth_user
 
 Key fields: `id`, unique two-letter `code`, `name_en`, `name_ar`, `currency`, `currency_label_ar`, `locale`, `enabled`, unique public `hostname`, IANA `timezone`, `default_locale`, and `enabled_public_site`.
 
-A country can exist operationally without being publicly launched. Both enabled/public gates and a valid hostname matter when adding a storefront.
+Nine Middle East countries are configured with public storefront hostnames and enabled public site gates: Egypt (`eg.ahsanli.com`), Saudi Arabia (`sa.ahsanli.com`), Jordan (`jo.ahsanli.com`), UAE (`ae.ahsanli.com`), Kuwait (`kw.ahsanli.com`), Oman (`om.ahsanli.com`), Bahrain (`bh.ahsanli.com`), Qatar (`qa.ahsanli.com`), and Iraq (`iq.ahsanli.com`). Each country has a dedicated unique deal rule in `core_dealrule`.
 
 ### `core_retailer`
 
@@ -136,4 +136,10 @@ The key `offer:<channelID>:<observationID>` prevents duplicate posts for the sam
 
 ## Migration discipline
 
-Migrations are embedded with `go:embed`, sorted by filename, and applied transactionally under a PostgreSQL advisory lock. `go_schema_migrations` records names. Use a new ordered file for every change; never edit an already deployed migration. Prefer additive, backward-compatible changes so code rollback against the same newer database remains safe.
+Migrations are embedded with `go:embed`, sorted by filename, and applied transactionally under a PostgreSQL advisory lock. `go_schema_migrations` records names. Use a new ordered file for every change; never edit an already deployed migration. Prefer additive, backward-compatible changes so code rollback against the same newer database remains safe. Active migrations include:
+- `0001_admin_session.sql`: Session table and indices.
+- `0002_country_hostname.sql`: Hostname, timezone, and locale fields on `core_country`.
+- `0003_channel_public_url.sql`: Public URL on publication channels.
+- `0004_category_taxonomy.sql`: Curated category taxonomy.
+- `0005_editorial_deal_review.sql`: Editorial candidate review fields and review queue indices.
+- `0006_additional_countries.sql`: Seed Middle East countries with dedicated subdomains and unique country deal rules.

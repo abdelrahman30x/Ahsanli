@@ -12,7 +12,7 @@ AHSANLY | أحسنلي is live on the same VPS (`134.122.89.95`) under `/srv/ahs
 | Next.js public site | `ahsanly-web.service` | `127.0.0.1:3100` |
 | Amazon price worker | `ahsanly-worker.service` | `--apply --live-candidates` |
 | Photo deal pipeline | `ahsanly-pipeline.service` | `--apply --allow-live-channels` |
-| Nginx | `/etc/nginx/sites-available/ahsanly` | `ahsanli.com`, `eg.ahsanli.com`, `www.ahsanli.com`, `134.122.89.95` |
+| Nginx | `/etc/nginx/sites-available/ahsanly` | `ahsanli.com`, `www.ahsanli.com`, 9 country subdomains (`eg`, `sa`, `ae`, `kw`, `jo`, `om`, `bh`, `qa`, `iq`), `134.122.89.95` |
 | PostgreSQL | database `ahsanly`, role `ahsanly_app` | loopback only |
 | Secrets | `/etc/ahsanly/ahsanly.env` | root-only, mode `0600` |
 | Captures | `/var/lib/ahsanly/captures` | owned by `botdeals` |
@@ -24,12 +24,12 @@ The BotAfflite Go/Next services are stopped and disabled. The old code remains a
 
 ## DNS and TLS
 
-Namecheap A records:
-- `@` → `134.122.89.95`
-- `eg` → `134.122.89.95`
-- `www` → `134.122.89.95` (or CNAME to apex)
+Namecheap A records point to `134.122.89.95`:
+- `@` (apex `ahsanli.com`)
+- `www`
+- Nine country subdomains: `eg`, `sa`, `ae`, `kw`, `jo`, `om`, `bh`, `qa`, `iq`
 
-Let's Encrypt certificate covers `ahsanli.com`, `eg.ahsanli.com`, `www.ahsanli.com`. Renewal is handled by the system `certbot.timer` plus `ahsanly-cert-renew.timer` reload logic.
+Let's Encrypt certificate covers all 11 hostnames: `ahsanli.com`, `www.ahsanli.com`, `eg.ahsanli.com`, `sa.ahsanli.com`, `ae.ahsanli.com`, `kw.ahsanli.com`, `jo.ahsanli.com`, `om.ahsanli.com`, `bh.ahsanli.com`, `qa.ahsanli.com`, and `iq.ahsanli.com`. Renewal is handled by the system `certbot.timer` plus `ahsanly-cert-renew.timer` reload logic.
 
 ## Nginx routing
 

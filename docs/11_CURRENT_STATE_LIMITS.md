@@ -4,13 +4,12 @@
 
 The following observations were recorded during the curated-storefront release on **2026-11-05**. They are not permanent health claims. Reconfirm before operating.
 
-- AHSANLY is live at `ahsanli.com`; Egypt serves `/ar` and `/en`.
-- Active source commit for the curated release: `cbbf57a74e980ea28ad6e4dac1145c5fef03e3b8`.
-- Go API, Next web, worker, and pipeline were active after automatic deployment.
-- Public Arabic, English, archive, and console routes returned HTTP 200.
-- No candidate was automatically approved to populate the new design.
-- The public approved-deals response was empty, so the honest empty state was intentional and verified.
-- An uncurated public product URL returned 404.
+- AHSANLY is live at `ahsanli.com`, serving Egypt and eight additional Middle East country subdomains (`eg.`, `sa.`, `ae.`, `kw.`, `jo.`, `om.`, `bh.`, `qa.`, `iq.ahsanli.com`).
+- Let's Encrypt TLS certificate covers all 11 apex, www, and country subdomains.
+- Go API, Next web, worker, and pipeline are active on the VPS.
+- Public Arabic, English, archive, and console routes return HTTP 200 across all subdomains.
+- No candidate was automatically approved to populate the new design; unpopulated countries display honest empty states.
+- An uncurated public product URL returns 404.
 - No production publication was manufactured for the release.
 
 ## Amazon source state and cap discrepancy
@@ -44,7 +43,7 @@ These are historical records, not instructions for the current stack. The active
 ## Technical limitations
 
 - The 1 GB VPS is not used for routine builds; artifacts come from GitHub.
-- Only Egypt is publicly launched; other countries require a full scoped launch.
+- Egypt has active retailer monitoring; other country subdomains are enabled with honest empty states awaiting dedicated retailer integrations.
 - Noon/Jumia remain paused/blocked or unsupported for fresh direct publication.
 - Category discovery exists but is not continuously scheduled.
 - Public price charts were removed from the sales flow, although observation history remains stored.
