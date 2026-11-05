@@ -64,7 +64,7 @@ jobs:
       - name: Create release bundle and manifest
         run: |
           mkdir -p dist
-          tar -czf dist/ahsanly-linux-amd64.tar.gz -C package .
+          tar -czf dist/ahsanly-linux-amd64.tar.gz -C package go_platform web_next
           bundle_sha=$(sha256sum dist/ahsanly-linux-amd64.tar.gz | cut -d' ' -f1)
           jq -n \
             --arg revision "$GITHUB_SHA" \
