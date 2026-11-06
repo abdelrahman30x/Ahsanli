@@ -46,7 +46,8 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 .site-shell{max-width:var(--max-width);margin:auto}
 .site-header{height:76px;padding:0 clamp(18px,4vw,56px);display:flex;align-items:center;justify-content:space-between;gap:24px;border-bottom:1px solid #ffffff12;background:#fffefaed;backdrop-filter:blur(14px);position:sticky;top:0;z-index:50}
 .brand{display:flex;align-items:center;gap:11px;font-size:23px;font-weight:700;letter-spacing:-.03em;color:var(--ink);white-space:nowrap}
-.brand-mark{height:39px;width:39px;border-radius:13px;background:var(--action);color:#fff;display:grid;place-items:center;box-shadow:0 7px 18px #155eef24}
+.brand-mark{height:38px;width:38px;border-radius:11px;background:#f8f5ee;border:1px solid #10233f14;display:grid;place-items:center;overflow:hidden;box-shadow:0 4px 12px #10233f0f;flex-shrink:0}
+.brand-mark img{width:100%;height:100%;object-fit:cover;display:block}
 .brand-tagline{display:none}
 .header-actions{display:flex;align-items:center;gap:12px}
 .site-header nav.desktop-nav{display:flex;gap:clamp(16px,2.3vw,30px);align-items:center;color:var(--ink-muted);font-size:14px;font-weight:600}

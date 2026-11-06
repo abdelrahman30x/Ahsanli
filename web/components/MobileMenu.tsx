@@ -78,7 +78,7 @@ export default function MobileMenu({
         <div className="mobile-menu-header">
           <Link href={`/${locale}/`} className="brand" onClick={close}>
             <span className="brand-mark" aria-hidden="true">
-              <img src="/logo-mark.svg" alt="" width="24" height="24" />
+              <img src="/logo-mark.svg" alt="" width="34" height="34" />
             </span>
             <span>{t(locale, "brand")}</span>
           </Link>

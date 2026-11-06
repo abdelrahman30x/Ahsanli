@@ -66,7 +66,7 @@ export default async function LocaleLayout({
               aria-label={t(lang, "brand")}
             >
               <span className="brand-mark" aria-hidden="true">
-                <img src="/logo-mark.svg" alt="" width="24" height="24" />
+                <img src="/logo-mark.svg" alt="" width="38" height="38" />
               </span>
               <span>{t(lang, "brand")}</span>
               <span className="brand-tagline">{t(lang, "tagline")}</span>

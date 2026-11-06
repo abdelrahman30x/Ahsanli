@@ -42,6 +42,14 @@ data/test-photos/
 *.gif
 *.mp4
 
+# Brand assets and public logo exceptions
+!AHSANLI_Curated_A_All_In_One/
+!AHSANLI_Curated_A_All_In_One/**
+!web/public/**/*.png
+!web/public/**/*.jpg
+!web/public/**/*.jpeg
+!web/public/**/*.svg
+
 # OS files
 .DS_Store
 Thumbs.db

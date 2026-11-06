@@ -1,0 +1,44 @@
+{
+  "brand_en": "AHSANLI",
+  "brand_ar": "أحسنلي",
+  "tagline_ar": "أحسن عرض.. أحسن سعر",
+  "domain": "https://ahsanli.com/",
+  "selected_concept": "Concept A — The Curated A",
+  "source": "User supplied AHSANLY_AI_GUIDE.md & logo brief; later explicit user spelling correction overrides old brand name.",
+  "colors": {
+    "navy": "#10233F",
+    "blue": "#155EEF",
+    "amber": "#F4B740",
+    "warm_off_white": "#F8F5EE",
+    "verification_only": "#147A52"
+  },
+  "country_codes": [
+    "EG",
+    "SA",
+    "AE",
+    "KW",
+    "QA",
+    "BH",
+    "OM",
+    "JO",
+    "IQ"
+  ],
+  "country_svg_files": [
+    "02_Telegram_Countries_SVG/AHSANLI_EG_Telegram_512_outlined.svg",
+    "02_Telegram_Countries_SVG/AHSANLI_SA_Telegram_512_outlined.svg",
+    "02_Telegram_Countries_SVG/AHSANLI_AE_Telegram_512_outlined.svg",
+    "02_Telegram_Countries_SVG/AHSANLI_KW_Telegram_512_outlined.svg",
+    "02_Telegram_Countries_SVG/AHSANLI_QA_Telegram_512_outlined.svg",
+    "02_Telegram_Countries_SVG/AHSANLI_BH_Telegram_512_outlined.svg",
+    "02_Telegram_Countries_SVG/AHSANLI_OM_Telegram_512_outlined.svg",
+    "02_Telegram_Countries_SVG/AHSANLI_JO_Telegram_512_outlined.svg",
+    "02_Telegram_Countries_SVG/AHSANLI_IQ_Telegram_512_outlined.svg"
+  ],
+  "banner_svg": "03_Long_Banners/AHSANLI_Long_Banner_2400x720_outlined.svg",
+  "master_symbol_svg": "01_Master_Logos/Curated_A_Standalone_outlined.svg",
+  "primary_logo_svg": "01_Master_Logos/AHSANLI_English_Horizontal_outlined.svg",
+  "preview": "04_Previews/AHSANLI_All_Assets_Overview.png",
+  "font_free_files_use_suffix": "_outlined.svg",
+  "legal_clearance": "not done",
+  "live_site_edited": false
+}

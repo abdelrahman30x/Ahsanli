@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="512"
+   height="512"
+   viewBox="0 0 512 512"
+   role="img"
+   aria-label="AHSANLI AE Telegram avatar - Curated A"
+   version="1.1"
+   id="svg4"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs4" />
+  <title
+     id="title1">AHSANLI AE Telegram avatar - Curated A</title>
+  <rect
+     x="0"
+     y="0"
+     width="512"
+     height="512"
+     rx="0"
+     fill="#F8F5EE"
+     opacity="1"
+     id="rect1" />
+  <circle
+     cx="256"
+     cy="256"
+     r="235"
+     fill="none"
+     opacity="1"
+     stroke="#155EEF"
+     stroke-width="10"
+     id="circle1" />
+  <circle
+     cx="256"
+     cy="256"
+     r="221"
+     fill="#FFFFFF"
+     opacity="1"
+     id="circle2" />
+  <g
+     transform="translate(106 78) scale(1.360000)"
+     aria-label="Curated A symbol"
+     id="g4">
+    <path
+       fill="#155EEF"
+       d="M24 160C17 149 20 135 27 123L91 24C100 9 110 5 125 6C140 7 151 16 159 31L207 123C190 110 179 102 165 100L140 57C135 48 127 43 118 45C109 47 105 54 101 62L62 159C54 177 42 182 31 176C27 173 25 168 24 160Z"
+       id="path2" />
+    <path
+       fill="#F4B740"
+       d="M145 99C162 88 181 92 194 106L214 143C198 130 184 122 167 120C161 112 153 104 145 99Z"
+       id="path3" />
+    <path
+       fill="#10233F"
+       d="M142 114C166 111 187 119 204 132L226 153C238 165 236 178 224 183C215 186 206 183 198 177L172 154C156 140 132 142 111 151C123 135 133 121 142 114Z"
+       id="path4" />
+  </g>
+  <rect
+     x="174"
+     y="359"
+     width="164"
+     height="88"
+     rx="44"
+     fill="#10233F"
+     opacity="1"
+     id="rect4" />
+  <path
+     d="m 219.49561,420 h 10.33593 l 2.55762,-8.3584 h 13.07813 L 248.13037,420 h 10.44141 l -13.5,-39.28711 H 232.6001 Z m 15.08203,-15.47754 0.52734,-1.6875 c 1.29199,-4.45605 2.45215,-9.41309 3.63867,-14.71289 1.26563,5.27344 2.55762,10.23047 3.92871,14.71289 l 0.52735,1.6875 z M 263.86963,420 h 27.2373 v -7.59375 h -17.92968 v -8.54297 h 16.53222 v -7.43555 h -16.53222 v -8.12109 h 17.95605 v -7.59375 h -27.26367 z"
+     id="text4"
+     style="font-weight:800;font-size:54px;font-family:Inter, sans-serif;letter-spacing:1;text-anchor:middle;fill:#ffffff"
+     aria-label="AE" />
+</svg>
